@@ -20,7 +20,24 @@ instalación ni servidor. Los datos se guardan localmente en el navegador
 - **Exportar CSV:** descarga todas las notas en un archivo compatible con Excel.
 - **Folios automáticos:** V0001 (venta), A0001 (apartado), T0001 (taller).
 
+## Versiones
+
+- **`index.html`** — versión local. Los datos se guardan solo en el navegador de
+  cada dispositivo. Ideal para un solo equipo o para probar. Sin dependencias.
+- **`app.html`** — versión en la nube (multi-dispositivo). Los datos se comparten
+  entre todos los dispositivos, con acceso por contraseña y sincronización en
+  tiempo real usando **Supabase**. Si no se configura, funciona igual que la local.
+
+## Poner las notas en la nube (multi-dispositivo)
+
+Sigue la guía **`SETUP.md`** (≈15 min, gratis). Resumen:
+1. Crear proyecto en Supabase y correr `supabase-setup.sql`.
+2. Crear tu usuario (correo + contraseña) en Authentication.
+3. Pegar *Project URL* y *anon key* en `app.html` (constante `CFG`).
+4. Publicar en el subdominio `notas.blackmachinebike.com` (el e-commerce en
+   WordPress se queda en el dominio principal).
+
 ## Notas técnicas
 
-Aplicación de una sola página (HTML + CSS + JavaScript), sin dependencias externas.
-Para respaldar los datos, usa "Exportar CSV" periódicamente.
+Aplicación de una sola página (HTML + CSS + JavaScript). Para respaldar los datos
+en modo local, usa "Exportar CSV" periódicamente.
