@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Black Machine Bike Shop — Notas</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --txt:#e8eaf0; --muted:#9aa3b2; --accent:#e11d2a; --accent2:#f5a623;
+    --green:#22c55e; --blue:#3b82f6; --amber:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
+  header{background:linear-gradient(90deg,#000,#1a1a1a);border-bottom:2px solid var(--accent);padding:14px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10}
+  header .logo{width:42px;height:42px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff}
+  header h1{font-size:18px;margin:0}
+  header small{color:var(--muted);display:block;font-weight:400}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .tabs button{background:var(--panel);color:var(--muted);border:1px solid var(--line);padding:10px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  .tabs button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  .card .v{font-size:24px;font-weight:800;margin-top:4px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:20px}
+  .panel h2{margin:0 0 14px;font-size:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:9px 10px;border-radius:7px;font-size:14px;font-family:inherit}
+  textarea{resize:vertical;min-height:60px}
+  .items-table{width:100%;border-collapse:collapse;margin-top:8px}
+  .items-table th,.items-table td{border:1px solid var(--line);padding:6px;font-size:13px;text-align:left}
+  .items-table th{background:var(--panel2);color:var(--muted)}
+  .items-table input{padding:6px}
+  .btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px}
+  .btn.sec{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+  .btn.sm{padding:6px 10px;font-size:12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .toolbar input,.toolbar select{width:auto;flex:1;min-width:140px}
+  .note-list{display:flex;flex-direction:column;gap:10px}
+  .note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .note .meta{font-size:13px;color:var(--muted)}
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase}
+  .badge.venta{background:rgba(34,197,94,.15);color:var(--green)}
+  .badge.apartado{background:rgba(245,158,11,.15);color:var(--amber)}
+  .badge.taller{background:rgba(59,130,246,.15);color:var(--blue)}
+  .badge.pagado{background:rgba(34,197,94,.15);color:var(--green)}
+  .badge.pendiente{background:rgba(245,158,11,.15);color:var(--amber)}
+  .badge.entregado{background:rgba(34,197,94,.15);color:var(--green)}
+  .badge.proceso{background:rgba(59,130,246,.15);color:var(--blue)}
+  .amt{font-size:20px;font-weight:800}
+  .muted{color:var(--muted)}
+  .total-line{text-align:right;font-size:18px;font-weight:800;margin-top:10px}
+  .hidden{display:none!important}
+  .empty{text-align:center;color:var(--muted);padding:30px}
+  dialog{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:12px;max-width:640px;width:92%;padding:0}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  .dlg-body{padding:22px}
+  .print-only{display:none}
+  @media print{
+    body{background:#fff;color:#000}
+    header,.tabs,.toolbar,.no-print,.cards{display:none!important}
+    .print-only{display:block}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">BM</div>
+  <div>
+    <h1>Black Machine Bike Shop</h1>
+    <small>Sistema de notas · Venta · Apartado · Taller</small>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button data-view="dashboard" class="active">Panel</button>
+    <button data-view="nueva">Nueva nota</button>
+    <button data-view="lista">Notas registradas</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="view-dashboard">
+    <div class="cards">
+      <div class="card"><div class="k">Total notas</div><div class="v" id="stTotal">0</div></div>
+      <div class="card"><div class="k">Ventas</div><div class="v" id="stVentas">$0</div></div>
+      <div class="card"><div class="k">Apartados (saldo)</div><div class="v" id="stApartados">$0</div></div>
+      <div class="card"><div class="k">Taller pendiente</div><div class="v" id="stTaller">0</div></div>
+    </div>
+    <div class="panel">
+      <h2>Últimas notas</h2>
+      <div class="note-list" id="recientes"></div>
+    </div>
+  </div>
+
+  <!-- NUEVA NOTA -->
+  <div id="view-nueva" class="hidden">
+    <div class="panel">
+      <h2>Registrar nueva nota</h2>
+      <div class="grid">
+        <div>
+          <label>Tipo de nota</label>
+          <select id="fTipo">
+            <option value="venta">Venta</option>
+            <option value="apartado">Apartado</option>
+            <option value="taller">Taller</option>
+          </select>
+        </div>
+        <div><label>Fecha</label><input type="date" id="fFecha"></div>
+        <div><label>Cliente</label><input id="fCliente" placeholder="Nombre del cliente"></div>
+        <div><label>Teléfono</label><input id="fTel" placeholder="Opcional"></div>
+      </div>
+
+      <!-- Campos específicos taller -->
+      <div id="grpTaller" class="grid hidden" style="margin-top:12px">
+        <div><label>Bicicleta / Modelo</label><input id="fBici" placeholder="Marca y modelo"></div>
+        <div><label>Estado</label>
+          <select id="fEstado">
+            <option value="proceso">En proceso</option>
+            <option value="entregado">Entregado</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1"><label>Diagnóstico / Trabajo a realizar</label><textarea id="fDiag" placeholder="Descripción del servicio"></textarea></div>
+      </div>
+
+      <h2 style="margin-top:18px">Conceptos</h2>
+      <table class="items-table">
+        <thead><tr><th style="width:50%">Descripción</th><th>Cant.</th><th>Precio unit.</th><th>Importe</th><th></th></tr></thead>
+        <tbody id="itemsBody"></tbody>
+      </table>
+      <div class="row"><button class="btn sec sm" id="addItem">+ Agregar concepto</button></div>
+
+      <!-- Pago apartado -->
+      <div id="grpApartado" class="grid hidden" style="margin-top:14px">
+        <div><label>Anticipo / Abono</label><input type="number" id="fAnticipo" value="0" min="0" step="0.01"></div>
+      </div>
+
+      <div class="total-line">Total: <span id="totalPreview">$0.00</span></div>
+      <div id="saldoLine" class="total-line hidden">Saldo pendiente: <span id="saldoPreview">$0.00</span></div>
+
+      <div style="margin-top:12px"><label>Notas / Observaciones</label><textarea id="fObs"></textarea></div>
+
+      <div class="row">
+        <button class="btn" id="guardar">Guardar nota</button>
+        <button class="btn sec" id="limpiar">Limpiar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LISTA -->
+  <div id="view-lista" class="hidden">
+    <div class="toolbar">
+      <input id="buscar" placeholder="Buscar por cliente, folio o concepto...">
+      <select id="filtroTipo">
+        <option value="">Todos los tipos</option>
+        <option value="venta">Venta</option>
+        <option value="apartado">Apartado</option>
+        <option value="taller">Taller</option>
+      </select>
+      <button class="btn sec" id="exportar">Exportar CSV</button>
+    </div>
+    <div class="note-list" id="listaNotas"></div>
+  </div>
+</div>
+
+<!-- Detalle -->
+<dialog id="dlg">
+  <div class="dlg-body" id="dlgBody"></div>
+</dialog>
+
+<script>
+const KEY='bm_notas_v1';
+const money=n=>'$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+const load=()=>JSON.parse(localStorage.getItem(KEY)||'[]');
+const save=d=>localStorage.setItem(KEY,JSON.stringify(d));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+let notas=load();
+
+// ---- Navegación ----
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  ['dashboard','nueva','lista'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==b.dataset.view));
+  if(b.dataset.view==='dashboard')renderDashboard();
+  if(b.dataset.view==='lista')renderLista();
+});
+
+// ---- Formulario ----
+const fTipo=document.getElementById('fTipo');
+const itemsBody=document.getElementById('itemsBody');
+document.getElementById('fFecha').valueAsDate=new Date();
+
+function addItemRow(desc='',cant=1,precio=''){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input class="i-desc" value="${desc}"></td>
+    <td><input class="i-cant" type="number" min="0" step="1" value="${cant}" style="width:70px"></td>
+    <td><input class="i-precio" type="number" min="0" step="0.01" value="${precio}" style="width:100px"></td>
+    <td class="i-importe">$0.00</td>
+    <td><button class="btn sec sm i-del">✕</button></td>`;
+  itemsBody.appendChild(tr);
+  tr.querySelectorAll('input').forEach(i=>i.oninput=recalc);
+  tr.querySelector('.i-del').onclick=()=>{tr.remove();recalc()};
+  recalc();
+}
+document.getElementById('addItem').onclick=()=>addItemRow();
+
+function recalc(){
+  let total=0;
+  itemsBody.querySelectorAll('tr').forEach(tr=>{
+    const c=+tr.querySelector('.i-cant').value||0;
+    const p=+tr.querySelector('.i-precio').value||0;
+    const imp=c*p; total+=imp;
+    tr.querySelector('.i-importe').textContent=money(imp);
+  });
+  document.getElementById('totalPreview').textContent=money(total);
+  const ant=+document.getElementById('fAnticipo').value||0;
+  document.getElementById('saldoPreview').textContent=money(total-ant);
+  return total;
+}
+document.getElementById('fAnticipo').oninput=recalc;
+
+fTipo.onchange=()=>{
+  const t=fTipo.value;
+  document.getElementById('grpTaller').classList.toggle('hidden',t!=='taller');
+  document.getElementById('grpApartado').classList.toggle('hidden',t!=='apartado');
+  document.getElementById('saldoLine').classList.toggle('hidden',t!=='apartado');
+};
+
+function limpiar(){
+  document.getElementById('fCliente').value='';
+  document.getElementById('fTel').value='';
+  document.getElementById('fBici').value='';
+  document.getElementById('fDiag').value='';
+  document.getElementById('fObs').value='';
+  document.getElementById('fAnticipo').value=0;
+  document.getElementById('fEstado').value='proceso';
+  itemsBody.innerHTML='';addItemRow();
+}
+document.getElementById('limpiar').onclick=limpiar;
+
+document.getElementById('guardar').onclick=()=>{
+  const items=[...itemsBody.querySelectorAll('tr')].map(tr=>({
+    desc:tr.querySelector('.i-desc').value.trim(),
+    cant:+tr.querySelector('.i-cant').value||0,
+    precio:+tr.querySelector('.i-precio').value||0
+  })).filter(i=>i.desc);
+  if(!document.getElementById('fCliente').value.trim())return alert('Ingresa el nombre del cliente.');
+  if(!items.length)return alert('Agrega al menos un concepto.');
+  const tipo=fTipo.value;
+  const total=items.reduce((s,i)=>s+i.cant*i.precio,0);
+  const anticipo=tipo==='apartado'?(+document.getElementById('fAnticipo').value||0):0;
+  const nota={
+    id:uid(),
+    folio:folio(tipo),
+    tipo,
+    fecha:document.getElementById('fFecha').value,
+    cliente:document.getElementById('fCliente').value.trim(),
+    tel:document.getElementById('fTel').value.trim(),
+    bici:document.getElementById('fBici').value.trim(),
+    diag:document.getElementById('fDiag').value.trim(),
+    estado:document.getElementById('fEstado').value,
+    items,total,anticipo,
+    saldo:total-anticipo,
+    obs:document.getElementById('fObs').value.trim(),
+    creada:new Date().toISOString()
+  };
+  notas.unshift(nota);save(notas);
+  alert('Nota '+nota.folio+' guardada.');
+  limpiar();
+  document.querySelector('.tabs button[data-view="lista"]').click();
+};
+
+function folio(tipo){
+  const pref={venta:'V',apartado:'A',taller:'T'}[tipo];
+  const n=notas.filter(x=>x.tipo===tipo).length+1;
+  return pref+String(n).padStart(4,'0');
+}
+
+// ---- Dashboard ----
+function renderDashboard(){
+  document.getElementById('stTotal').textContent=notas.length;
+  const ventas=notas.filter(n=>n.tipo==='venta').reduce((s,n)=>s+n.total,0);
+  const saldoAp=notas.filter(n=>n.tipo==='apartado').reduce((s,n)=>s+n.saldo,0);
+  const tallerP=notas.filter(n=>n.tipo==='taller'&&n.estado==='proceso').length;
+  document.getElementById('stVentas').textContent=money(ventas);
+  document.getElementById('stApartados').textContent=money(saldoAp);
+  document.getElementById('stTaller').textContent=tallerP;
+  const r=document.getElementById('recientes');
+  r.innerHTML=notas.slice(0,5).map(noteHTML).join('')||'<div class="empty">Aún no hay notas registradas.</div>';
+  bindNoteClicks(r);
+}
+
+// ---- Lista ----
+function renderLista(){
+  const q=document.getElementById('buscar').value.toLowerCase();
+  const ft=document.getElementById('filtroTipo').value;
+  const el=document.getElementById('listaNotas');
+  const filtered=notas.filter(n=>{
+    if(ft&&n.tipo!==ft)return false;
+    const hay=(n.cliente+' '+n.folio+' '+n.items.map(i=>i.desc).join(' ')).toLowerCase();
+    return hay.includes(q);
+  });
+  el.innerHTML=filtered.map(noteHTML).join('')||'<div class="empty">Sin resultados.</div>';
+  bindNoteClicks(el);
+}
+document.getElementById('buscar').oninput=renderLista;
+document.getElementById('filtroTipo').onchange=renderLista;
+
+function noteHTML(n){
+  const estado=n.tipo==='apartado'?(n.saldo<=0?'pagado':'pendiente'):(n.tipo==='taller'?n.estado:'');
+  const estBadge=estado?`<span class="badge ${estado}">${estado==='proceso'?'en proceso':estado}</span>`:'';
+  const amt=n.tipo==='apartado'?`<div class="amt">${money(n.saldo)}<div class="muted" style="font-size:11px">saldo de ${money(n.total)}</div></div>`:`<div class="amt">${money(n.total)}</div>`;
+  return `<div class="note" data-id="${n.id}">
+    <div>
+      <div><span class="badge ${n.tipo}">${n.tipo}</span> <strong>${n.folio}</strong> ${estBadge}</div>
+      <div class="meta">${n.cliente}${n.bici?' · '+n.bici:''}</div>
+      <div class="meta">${n.fecha}</div>
+    </div>
+    ${amt}
+  </div>`;
+}
+
+function bindNoteClicks(container){
+  container.querySelectorAll('.note').forEach(el=>el.onclick=()=>abrirDetalle(el.dataset.id));
+}
+
+function abrirDetalle(id){
+  const n=notas.find(x=>x.id===id);if(!n)return;
+  const rows=n.items.map(i=>`<tr><td>${i.desc}</td><td>${i.cant}</td><td>${money(i.precio)}</td><td>${money(i.cant*i.precio)}</td></tr>`).join('');
+  document.getElementById('dlgBody').innerHTML=`
+    <div class="print-only" style="text-align:center;margin-bottom:10px"><h2>Black Machine Bike Shop</h2></div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:0"><span class="badge ${n.tipo}">${n.tipo}</span> ${n.folio}</h2>
+      <button class="btn sec sm no-print" onclick="document.getElementById('dlg').close()">Cerrar</button>
+    </div>
+    <p class="meta">${n.fecha} · Cliente: <strong>${n.cliente}</strong> ${n.tel?'· Tel: '+n.tel:''}</p>
+    ${n.bici?`<p class="meta">Bicicleta: ${n.bici}</p>`:''}
+    ${n.diag?`<p class="meta">Servicio: ${n.diag}</p>`:''}
+    <table class="items-table"><thead><tr><th>Descripción</th><th>Cant.</th><th>P.U.</th><th>Importe</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="total-line">Total: ${money(n.total)}</div>
+    ${n.tipo==='apartado'?`<div class="total-line">Abonado: ${money(n.anticipo)}</div><div class="total-line">Saldo: ${money(n.saldo)}</div>`:''}
+    ${n.obs?`<p class="meta">Obs: ${n.obs}</p>`:''}
+    <div class="row no-print">
+      ${n.tipo==='apartado'&&n.saldo>0?'<button class="btn sm" id="abonar">Registrar abono</button>':''}
+      ${n.tipo==='taller'&&n.estado==='proceso'?'<button class="btn sm" id="entregar">Marcar entregado</button>':''}
+      <button class="btn sec sm" onclick="window.print()">Imprimir</button>
+      <button class="btn sec sm" id="borrar">Eliminar</button>
+    </div>`;
+  document.getElementById('dlg').showModal();
+  const ab=document.getElementById('abonar');
+  if(ab)ab.onclick=()=>{
+    const v=parseFloat(prompt('Monto del abono:','0'));
+    if(v>0){n.anticipo+=v;n.saldo=n.total-n.anticipo;save(notas);document.getElementById('dlg').close();refresh()}
+  };
+  const en=document.getElementById('entregar');
+  if(en)en.onclick=()=>{n.estado='entregado';save(notas);document.getElementById('dlg').close();refresh()};
+  document.getElementById('borrar').onclick=()=>{
+    if(confirm('¿Eliminar esta nota?')){notas=notas.filter(x=>x.id!==id);save(notas);document.getElementById('dlg').close();refresh()}
+  };
+}
+
+function refresh(){renderDashboard();renderLista();}
+
+// ---- Exportar CSV ----
+document.getElementById('exportar').onclick=()=>{
+  const head=['Folio','Tipo','Fecha','Cliente','Telefono','Bicicleta','Total','Anticipo','Saldo','Estado','Conceptos'];
+  const rows=notas.map(n=>[n.folio,n.tipo,n.fecha,n.cliente,n.tel,n.bici,n.total,n.anticipo,n.saldo,n.estado,
+    n.items.map(i=>`${i.cant}x ${i.desc} (${i.precio})`).join(' | ')]
+    .map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(','));
+  const csv=[head.join(','),...rows].join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='notas_black_machine.csv';a.click();
+};
+
+// init
+addItemRow();
+renderDashboard();
+</script>
+</body>
+</html>
