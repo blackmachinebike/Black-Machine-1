@@ -60,6 +60,9 @@
   dialog::backdrop{background:rgba(0,0,0,.6)}
   .dlg-body{padding:18px}
   .dlg-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;padding:0 18px 18px}
+  #ask{max-width:400px}
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;border:1px solid var(--line);padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:100}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   /* ---- Recibo / PDF ---- */
   .receipt{background:#fff;color:#1a1a1a;border-radius:8px;padding:26px 30px;font-size:13px}
   .receipt .r-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:14px}
@@ -205,6 +208,7 @@
   <div class="dlg-body"><div class="receipt" id="dlgBody"></div></div>
   <div class="dlg-actions" id="dlgActions"></div>
 </dialog>
+<dialog id="ask"></dialog>
 
 <script>
 const KEY='bm_notas_v1';
@@ -218,27 +222,68 @@ const TIENDA=Object.assign({
 function saveConfig(){localStorage.setItem(CKEY,JSON.stringify({tel:TIENDA.tel,whatsapp:TIENDA.whatsapp}));}
 const waLink=num=>num?('https://wa.me/'+num.replace(/[^0-9]/g,'')):'';
 const PAGOS=['Efectivo','Tarjeta','Transferencia','Depósito','Mixto'];
+// --- Diálogos propios (funcionan dentro del visor web, sin prompt/alert/confirm) ---
+function toast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t);}
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2400);
+}
+function askInput({title,label,value='',type='text',ok='Aceptar'}){
+  return new Promise(res=>{
+    const d=document.getElementById('ask');
+    d.innerHTML=`<div class="dlg-body"><h2 style="margin:0 0 12px;font-size:16px">${title}</h2>
+      <label>${label}</label><input id="askInp" type="${type}" value="${value}" ${type==='number'?'step="0.01" min="0"':''}>
+      <div class="row" style="justify-content:flex-end;margin-top:16px">
+        <button class="btn sec sm" value="cancel" id="askCancel">Cancelar</button>
+        <button class="btn sm" id="askOk">${ok}</button></div></div>`;
+    d.showModal();
+    const inp=d.querySelector('#askInp');inp.focus();try{inp.select();}catch(e){}
+    const done=v=>{d.close();res(v);};
+    d.querySelector('#askOk').onclick=()=>done(inp.value);
+    d.querySelector('#askCancel').onclick=()=>done(null);
+    inp.onkeydown=e=>{if(e.key==='Enter')done(inp.value);};
+  });
+}
+function confirmModal(msg){
+  return new Promise(res=>{
+    const d=document.getElementById('ask');
+    d.innerHTML=`<div class="dlg-body"><p style="margin:0 0 16px">${msg}</p>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn sec sm" id="cNo">Cancelar</button>
+        <button class="btn sm" id="cYes">Aceptar</button></div></div>`;
+    d.showModal();
+    d.querySelector('#cYes').onclick=()=>{d.close();res(true);};
+    d.querySelector('#cNo').onclick=()=>{d.close();res(false);};
+  });
+}
 // Logo vectorial (robot con eslabón de cadena). ink = trazo, paper = fondo interno.
 function logoMark(ink,paper,size){
-  return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" aria-label="Black Machine">
+  return `<svg viewBox="0 0 220 210" width="${size}" height="${size*210/220}" xmlns="http://www.w3.org/2000/svg" aria-label="Black Machine">
     <g fill="${ink}">
-      <rect x="16" y="82" width="22" height="52" rx="11"/>
-      <rect x="162" y="82" width="22" height="52" rx="11"/>
-      <rect x="34" y="44" width="132" height="130" rx="26"/>
-      <rect x="97" y="6" width="6" height="42"/>
-      <circle cx="100" cy="14" r="11"/>
-      <rect x="64" y="30" width="16" height="20" rx="3"/>
-      <rect x="120" y="30" width="16" height="20" rx="3"/>
+      <!-- antena central con esfera -->
+      <circle cx="110" cy="16" r="13"/>
+      <rect x="106" y="16" width="8" height="40"/>
+      <!-- dos tabs cuadrados superiores -->
+      <rect x="74" y="34" width="20" height="24" rx="3"/>
+      <rect x="126" y="34" width="20" height="24" rx="3"/>
+      <!-- orejas laterales -->
+      <rect x="20" y="92" width="24" height="58" rx="12"/>
+      <rect x="176" y="92" width="24" height="58" rx="12"/>
+      <!-- cuerpo/cabeza -->
+      <rect x="38" y="52" width="144" height="140" rx="32"/>
     </g>
-    <rect x="54" y="64" width="92" height="90" rx="15" fill="${paper}"/>
+    <!-- pantalla -->
+    <rect x="66" y="76" width="88" height="94" rx="18" fill="${paper}"/>
+    <!-- eslabon de cadena: union de dos circulos (placa) -->
     <g fill="${ink}">
-      <circle cx="79" cy="109" r="22"/>
-      <circle cx="121" cy="109" r="22"/>
-      <rect x="79" y="97" width="42" height="24" rx="12"/>
+      <circle cx="92" cy="123" r="24"/>
+      <circle cx="128" cy="123" r="24"/>
+      <rect x="92" y="105" width="36" height="36" rx="18"/>
     </g>
-    <circle cx="79" cy="109" r="11.5" fill="${paper}"/>
-    <circle cx="121" cy="109" r="11.5" fill="${paper}"/>
-    <g fill="${ink}"><circle cx="79" cy="109" r="5"/><circle cx="121" cy="109" r="5"/></g>
+    <circle cx="92" cy="123" r="12.5" fill="${paper}"/>
+    <circle cx="128" cy="123" r="12.5" fill="${paper}"/>
+    <g fill="${ink}"><circle cx="92" cy="123" r="5.5"/><circle cx="128" cy="123" r="5.5"/></g>
   </svg>`;
 }
 document.getElementById('brandLogo').innerHTML=logoMark('#f2f2f2','#000',44);
@@ -246,12 +291,12 @@ function renderHeader(){
   document.getElementById('hSub').textContent=TIENDA.dir+(TIENDA.whatsapp?' · WhatsApp '+TIENDA.whatsapp:'');
 }
 renderHeader();
-document.getElementById('btnConfig').onclick=()=>{
-  const w=prompt('WhatsApp de la tienda (con lada, ej. 33 1234 5678):',TIENDA.whatsapp);
+document.getElementById('btnConfig').onclick=async()=>{
+  const w=await askInput({title:'Datos de la tienda',label:'WhatsApp (con lada, ej. 33 1234 5678)',value:TIENDA.whatsapp});
   if(w!==null)TIENDA.whatsapp=w.trim();
-  const t=prompt('Teléfono de la tienda (opcional):',TIENDA.tel);
+  const t=await askInput({title:'Datos de la tienda',label:'Teléfono (opcional)',value:TIENDA.tel});
   if(t!==null)TIENDA.tel=t.trim();
-  saveConfig();renderHeader();
+  saveConfig();renderHeader();toast('Datos de la tienda actualizados');
 };
 const money=n=>'$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
 const load=()=>JSON.parse(localStorage.getItem(KEY)||'[]');
@@ -330,8 +375,8 @@ document.getElementById('guardar').onclick=()=>{
     cant:+tr.querySelector('.i-cant').value||0,
     precio:+tr.querySelector('.i-precio').value||0
   })).filter(i=>i.desc);
-  if(!document.getElementById('fCliente').value.trim())return alert('Ingresa el nombre del cliente.');
-  if(!items.length)return alert('Agrega al menos un concepto.');
+  if(!document.getElementById('fCliente').value.trim()){toast('Ingresa el nombre del cliente.');return;}
+  if(!items.length){toast('Agrega al menos un concepto.');return;}
   const tipo=fTipo.value;
   const total=items.reduce((s,i)=>s+i.cant*i.precio,0);
   const anticipo=tipo==='apartado'?(+document.getElementById('fAnticipo').value||0):0;
@@ -353,7 +398,7 @@ document.getElementById('guardar').onclick=()=>{
     creada:new Date().toISOString()
   };
   notas.unshift(nota);save(notas);
-  alert('Nota '+nota.folio+' guardada.');
+  toast('Nota '+nota.folio+' guardada.');
   limpiar();
   document.querySelector('.tabs button[data-view="lista"]').click();
 };
@@ -460,9 +505,14 @@ function abrirDetalle(id){
     <button class="btn sec sm" onclick="document.getElementById('dlg').close()">Cerrar</button>`;
   document.getElementById('dlg').showModal();
   const ab=document.getElementById('abonar');
-  if(ab)ab.onclick=()=>{
-    const v=parseFloat(prompt('Monto del abono:','0'));
-    if(v>0){n.anticipo+=v;n.saldo=n.total-n.anticipo;save(notas);document.getElementById('dlg').close();refresh()}
+  if(ab)ab.onclick=async()=>{
+    const r=await askInput({title:'Registrar abono',label:'Monto del abono (saldo actual '+money(n.saldo)+')',type:'number',value:'',ok:'Abonar'});
+    if(r===null)return;
+    const v=parseFloat(r);
+    if(!(v>0)){toast('Ingresa un monto válido.');return;}
+    n.anticipo+=v;n.saldo=Math.max(0,n.total-n.anticipo);save(notas);
+    document.getElementById('dlg').close();refresh();
+    toast('Abono de '+money(v)+' registrado.');
   };
   const en=document.getElementById('entregar');
   if(en)en.onclick=()=>{n.estado='entregado';save(notas);document.getElementById('dlg').close();refresh()};
@@ -472,8 +522,10 @@ function abrirDetalle(id){
     const msg=`Hola ${n.cliente}, gracias por tu preferencia en ${TIENDA.nombre}.\n${tipoLabel[n.tipo]} ${n.folio}\n${monto}\nPago: ${n.pago||'—'}`;
     window.open(waLink(n.wa)+'?text='+encodeURIComponent(msg),'_blank');
   };
-  document.getElementById('borrar').onclick=()=>{
-    if(confirm('¿Eliminar esta nota?')){notas=notas.filter(x=>x.id!==id);save(notas);document.getElementById('dlg').close();refresh()}
+  document.getElementById('borrar').onclick=async()=>{
+    if(await confirmModal('¿Eliminar la nota '+n.folio+'? Esta acción no se puede deshacer.')){
+      notas=notas.filter(x=>x.id!==id);save(notas);document.getElementById('dlg').close();refresh();toast('Nota eliminada.');
+    }
   };
 }
 
