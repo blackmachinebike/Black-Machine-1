@@ -244,8 +244,8 @@
    (los datos se guardan solo en este dispositivo).
    ========================================================= */
 const CFG={
-  url:'',   // ej. https://xxxxxxxx.supabase.co
-  key:''    // clave "anon public"
+  url:'https://mymoaywrliiclvvffqun.supabase.co',   // Project URL
+  key:'sb_publishable_dpFoocifr19fA5KcxSzznA_QgIC7E3J'  // clave publishable (pública, segura para el navegador)
 };
 const CLOUD=!!(CFG.url&&CFG.key&&window.supabase);
 const sb=CLOUD?window.supabase.createClient(CFG.url,CFG.key):null;
