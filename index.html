@@ -213,7 +213,7 @@ const TIENDA=Object.assign({
   nombre:'Black Machine Bike Shop',
   dir:'Av. Tesistán 704A, San José del Bajío, Zapopan, Jalisco. CP 45140',
   tel:'',
-  whatsapp:''
+  whatsapp:'3325899142'
 },JSON.parse(localStorage.getItem(CKEY)||'{}'));
 function saveConfig(){localStorage.setItem(CKEY,JSON.stringify({tel:TIENDA.tel,whatsapp:TIENDA.whatsapp}));}
 const waLink=num=>num?('https://wa.me/'+num.replace(/[^0-9]/g,'')):'';
