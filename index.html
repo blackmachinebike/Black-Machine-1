@@ -98,10 +98,11 @@
 <body>
 <header>
   <span class="logo" id="brandLogo"></span>
-  <div>
+  <div style="flex:1">
     <h1>Black Machine Bike Shop</h1>
-    <small>Av. Tesistán 704A, San José del Bajío, Zapopan, Jalisco · CP 45140</small>
+    <small id="hSub"></small>
   </div>
+  <button class="btn sec sm no-print" id="btnConfig">⚙ Tienda</button>
 </header>
 
 <div class="wrap">
@@ -141,6 +142,10 @@
         <div><label>Fecha</label><input type="date" id="fFecha"></div>
         <div><label>Cliente</label><input id="fCliente" placeholder="Nombre del cliente"></div>
         <div><label>Teléfono</label><input id="fTel" placeholder="Opcional"></div>
+        <div><label>WhatsApp del cliente</label><input id="fWa" placeholder="Opcional"></div>
+        <div><label>Método de pago</label>
+          <select id="fPago"></select>
+        </div>
       </div>
 
       <!-- Campos específicos taller -->
@@ -203,11 +208,16 @@
 
 <script>
 const KEY='bm_notas_v1';
-const TIENDA={
+const CKEY='bm_config_v1';
+const TIENDA=Object.assign({
   nombre:'Black Machine Bike Shop',
   dir:'Av. Tesistán 704A, San José del Bajío, Zapopan, Jalisco. CP 45140',
-  tel:''
-};
+  tel:'',
+  whatsapp:''
+},JSON.parse(localStorage.getItem(CKEY)||'{}'));
+function saveConfig(){localStorage.setItem(CKEY,JSON.stringify({tel:TIENDA.tel,whatsapp:TIENDA.whatsapp}));}
+const waLink=num=>num?('https://wa.me/'+num.replace(/[^0-9]/g,'')):'';
+const PAGOS=['Efectivo','Tarjeta','Transferencia','Depósito','Mixto'];
 // Logo vectorial (robot con eslabón de cadena). ink = trazo, paper = fondo interno.
 function logoMark(ink,paper,size){
   return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" aria-label="Black Machine">
@@ -232,6 +242,17 @@ function logoMark(ink,paper,size){
   </svg>`;
 }
 document.getElementById('brandLogo').innerHTML=logoMark('#f2f2f2','#000',44);
+function renderHeader(){
+  document.getElementById('hSub').textContent=TIENDA.dir+(TIENDA.whatsapp?' · WhatsApp '+TIENDA.whatsapp:'');
+}
+renderHeader();
+document.getElementById('btnConfig').onclick=()=>{
+  const w=prompt('WhatsApp de la tienda (con lada, ej. 33 1234 5678):',TIENDA.whatsapp);
+  if(w!==null)TIENDA.whatsapp=w.trim();
+  const t=prompt('Teléfono de la tienda (opcional):',TIENDA.tel);
+  if(t!==null)TIENDA.tel=t.trim();
+  saveConfig();renderHeader();
+};
 const money=n=>'$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
 const load=()=>JSON.parse(localStorage.getItem(KEY)||'[]');
 const save=d=>localStorage.setItem(KEY,JSON.stringify(d));
@@ -251,6 +272,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
 const fTipo=document.getElementById('fTipo');
 const itemsBody=document.getElementById('itemsBody');
 document.getElementById('fFecha').valueAsDate=new Date();
+document.getElementById('fPago').innerHTML=PAGOS.map(p=>`<option>${p}</option>`).join('');
 
 function addItemRow(desc='',cant=1,precio=''){
   const tr=document.createElement('tr');
@@ -291,6 +313,8 @@ fTipo.onchange=()=>{
 function limpiar(){
   document.getElementById('fCliente').value='';
   document.getElementById('fTel').value='';
+  document.getElementById('fWa').value='';
+  document.getElementById('fPago').selectedIndex=0;
   document.getElementById('fBici').value='';
   document.getElementById('fDiag').value='';
   document.getElementById('fObs').value='';
@@ -318,6 +342,8 @@ document.getElementById('guardar').onclick=()=>{
     fecha:document.getElementById('fFecha').value,
     cliente:document.getElementById('fCliente').value.trim(),
     tel:document.getElementById('fTel').value.trim(),
+    wa:document.getElementById('fWa').value.trim(),
+    pago:document.getElementById('fPago').value,
     bici:document.getElementById('fBici').value.trim(),
     diag:document.getElementById('fDiag').value.trim(),
     estado:document.getElementById('fEstado').value,
@@ -390,10 +416,11 @@ const tipoLabel={venta:'Nota de venta',apartado:'Nota de apartado',taller:'Nota 
 function abrirDetalle(id){
   const n=notas.find(x=>x.id===id);if(!n)return;
   const rows=n.items.map(i=>`<tr><td>${i.desc}</td><td class="num">${i.cant}</td><td class="num">${money(i.precio)}</td><td class="num">${money(i.cant*i.precio)}</td></tr>`).join('');
+  const contactoCli=[n.tel?'Tel: '+n.tel:'',n.wa?'WhatsApp: '+n.wa:''].filter(Boolean).join('<br>');
   const infoBlocks=`
-    <div><b>Cliente</b>${n.cliente||'—'}${n.tel?'<br>Tel: '+n.tel:''}</div>
+    <div><b>Cliente</b>${n.cliente||'—'}${contactoCli?'<br>'+contactoCli:''}</div>
     ${n.bici?`<div><b>Bicicleta</b>${n.bici}</div>`:''}
-    <div style="text-align:right"><b>Fecha</b>${n.fecha}</div>`;
+    <div style="text-align:right"><b>Fecha</b>${n.fecha}${n.pago?'<br><b>Pago</b>'+n.pago:''}</div>`;
   const totales=`
     <div class="r-totals">
       <div><span>Total</span><span>${money(n.total)}</span></div>
@@ -407,7 +434,7 @@ function abrirDetalle(id){
         ${logoMark('#1a1a1a','#fff',54)}
         <div>
           <div class="r-name">BLACK MACHINE<br>BIKE SHOP</div>
-          <div class="r-sub">${TIENDA.dir}${TIENDA.tel?' · Tel '+TIENDA.tel:''}</div>
+          <div class="r-sub">${TIENDA.dir}${TIENDA.tel?' · Tel '+TIENDA.tel:''}${TIENDA.whatsapp?' · WhatsApp '+TIENDA.whatsapp:''}</div>
         </div>
       </div>
       <div class="r-doc">
@@ -427,6 +454,7 @@ function abrirDetalle(id){
   document.getElementById('dlgActions').innerHTML=`
     ${n.tipo==='apartado'&&n.saldo>0?'<button class="btn sm" id="abonar">Registrar abono</button>':''}
     ${n.tipo==='taller'&&n.estado==='proceso'?'<button class="btn sm" id="entregar">Marcar entregado</button>':''}
+    ${n.wa?`<button class="btn sm" id="waCli" style="background:#25D366">WhatsApp cliente</button>`:''}
     <button class="btn sec sm" onclick="window.print()">Imprimir / PDF</button>
     <button class="btn sec sm" id="borrar">Eliminar</button>
     <button class="btn sec sm" onclick="document.getElementById('dlg').close()">Cerrar</button>`;
@@ -438,6 +466,12 @@ function abrirDetalle(id){
   };
   const en=document.getElementById('entregar');
   if(en)en.onclick=()=>{n.estado='entregado';save(notas);document.getElementById('dlg').close();refresh()};
+  const wc=document.getElementById('waCli');
+  if(wc)wc.onclick=()=>{
+    const monto=n.tipo==='apartado'?`Saldo pendiente: ${money(n.saldo)} (de ${money(n.total)})`:`Total: ${money(n.total)}`;
+    const msg=`Hola ${n.cliente}, gracias por tu preferencia en ${TIENDA.nombre}.\n${tipoLabel[n.tipo]} ${n.folio}\n${monto}\nPago: ${n.pago||'—'}`;
+    window.open(waLink(n.wa)+'?text='+encodeURIComponent(msg),'_blank');
+  };
   document.getElementById('borrar').onclick=()=>{
     if(confirm('¿Eliminar esta nota?')){notas=notas.filter(x=>x.id!==id);save(notas);document.getElementById('dlg').close();refresh()}
   };
@@ -447,8 +481,8 @@ function refresh(){renderDashboard();renderLista();}
 
 // ---- Exportar CSV ----
 document.getElementById('exportar').onclick=()=>{
-  const head=['Folio','Tipo','Fecha','Cliente','Telefono','Bicicleta','Total','Anticipo','Saldo','Estado','Conceptos'];
-  const rows=notas.map(n=>[n.folio,n.tipo,n.fecha,n.cliente,n.tel,n.bici,n.total,n.anticipo,n.saldo,n.estado,
+  const head=['Folio','Tipo','Fecha','Cliente','Telefono','WhatsApp','MetodoPago','Bicicleta','Total','Anticipo','Saldo','Estado','Conceptos'];
+  const rows=notas.map(n=>[n.folio,n.tipo,n.fecha,n.cliente,n.tel,n.wa||'',n.pago||'',n.bici,n.total,n.anticipo,n.saldo,n.estado,
     n.items.map(i=>`${i.cant}x ${i.desc} (${i.precio})`).join(' | ')]
     .map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(','));
   const csv=[head.join(','),...rows].join('\n');
