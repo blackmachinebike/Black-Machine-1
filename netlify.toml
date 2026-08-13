@@ -1,0 +1,3 @@
+[build]
+  # Publicar la versión en la nube (con login y datos compartidos)
+  publish = "deploy"
