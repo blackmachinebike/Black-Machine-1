@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Black Machine Bike Shop — Tienda BMX</title>
-<meta name="description" content="Tienda BMX: cuadros, tijeras, manubrios, puños, pedales y refacciones de las marcas Cult, Demolition, Sunday, Kink, Summit y más. Zapopan, Jalisco.">
+<meta name="description" content="Black Machine Bike Shop. No vendemos bicicletas, construimos cultura sobre ruedas. Cuadros, tijeras, manubrios, puños, pedales y refacciones de Cult, Demolition, Sunday, Kink, Summit y más. Zapopan, Jalisco.">
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
@@ -26,9 +26,20 @@
   .hero{max-width:1200px;margin:0 auto;padding:34px 20px 10px}
   .hero-box{background:linear-gradient(120deg,#171a21,#0b0d11);border:1px solid var(--line);border-radius:16px;padding:34px;position:relative;overflow:hidden}
   .hero-box::after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(225,29,42,.25),transparent 70%)}
-  .hero-box h2{margin:0 0 10px;font-size:30px;line-height:1.15}
-  .hero-box p{margin:0 0 18px;color:var(--muted);max-width:580px}
+  .hero-box .eyebrow{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+  .hero-box h2{margin:0 0 12px;font-size:32px;line-height:1.12;font-weight:800}
+  .hero-box p{margin:0 0 18px;color:var(--muted);max-width:600px;line-height:1.55}
   .hero-box .btn{background:var(--accent);color:#fff;border:none;padding:12px 22px;border-radius:9px;cursor:pointer;font-weight:800;font-size:15px}
+  .hero-box .hero-tag{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);color:var(--txt);font-style:italic;font-size:15px;max-width:520px;position:relative;z-index:1}
+  /* Pilares */
+  .values{max-width:1200px;margin:0 auto;padding:22px 20px 0}
+  .values-inner{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .val{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:5px}
+  .val .vk{font-weight:800;font-size:14px;position:relative;padding-left:12px}
+  .val .vk::before{content:"";position:absolute;left:0;top:3px;bottom:3px;width:3px;background:var(--accent);border-radius:2px}
+  .val .vv{color:var(--muted);font-size:12.5px;line-height:1.4}
+  @media(max-width:900px){.values-inner{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.values-inner{grid-template-columns:1fr}}
   .wrap{max-width:1200px;margin:0 auto;padding:16px 20px 60px}
   .filter-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:800;margin:16px 0 8px}
   .chips{display:flex;gap:8px;flex-wrap:wrap}
@@ -84,6 +95,10 @@
   .foot .btn:hover{filter:brightness(1.06)}
   .foot .note{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px}
   footer{border-top:1px solid var(--line);margin-top:40px;background:#0b0d11}
+  .promise{background:linear-gradient(90deg,#000,#15080a);border-bottom:1px solid var(--line)}
+  .promise-inner{max-width:1200px;margin:0 auto;padding:30px 20px}
+  .promise .pk{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--accent)}
+  .promise p{margin:10px 0 0;font-size:17px;line-height:1.5;max-width:760px;color:var(--txt)}
   .fwrap{max-width:1200px;margin:0 auto;padding:26px 20px;display:flex;gap:30px;flex-wrap:wrap;color:var(--muted);font-size:13px}
   .fwrap b{color:var(--txt)}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:#04210f;padding:12px 20px;border-radius:10px;font-weight:800;font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:all .25s}
@@ -107,9 +122,21 @@
 
 <section class="hero">
   <div class="hero-box">
-    <h2>Arma tu BMX<br><span style="color:var(--accent)">con lo mejor del mercado</span></h2>
-    <p>Cuadros, tijeras, manubrios, puños, pedales y refacciones de las marcas que ruedan: Cult, Demolition, Sunday, Kink, Summit y más. Aparta en línea y recoge en tienda, o pide envío. Pago al confirmar por WhatsApp.</p>
+    <span class="eyebrow">Black Machine Bike Shop</span>
+    <h2>No vendemos bicicletas.<br><span style="color:var(--accent)">Construimos cultura sobre ruedas.</span></h2>
+    <p>Herramientas para avanzar, superarte y disfrutar el camino. Montaña, ciudad, pista, parque o carretera: la misma pasión. Elige tu equipo de las marcas que de verdad ruedan y confírmalo por WhatsApp.</p>
     <button class="btn" onclick="document.querySelector('.wrap').scrollIntoView({behavior:'smooth'})">Ver catálogo</button>
+    <div class="hero-tag">“Si lleva ese nombre, está hecho para rodar de verdad.”</div>
+  </div>
+</section>
+
+<section class="values">
+  <div class="values-inner">
+    <div class="val"><span class="vk">Autenticidad</span><span class="vv">Hacemos las cosas con honestidad y pasión.</span></div>
+    <div class="val"><span class="vk">Calidad</span><span class="vv">Los detalles marcan la diferencia.</span></div>
+    <div class="val"><span class="vk">Comunidad</span><span class="vv">El ciclismo se disfruta más cuando se comparte.</span></div>
+    <div class="val"><span class="vk">Evolución</span><span class="vv">Siempre buscamos mejorar, aprender e innovar.</span></div>
+    <div class="val"><span class="vk">Respeto</span><span class="vv">Por las personas, el deporte y el camino.</span></div>
   </div>
 </section>
 
@@ -132,6 +159,12 @@
 </div>
 
 <footer>
+  <div class="promise">
+    <div class="promise-inner">
+      <span class="pk">Nuestra promesa</span>
+      <p>Acompañar a cada ciclista con productos, servicio y conocimiento que inspiren confianza para seguir avanzando. No seguimos tendencias: construimos una identidad que permanece.</p>
+    </div>
+  </div>
   <div class="fwrap">
     <div>
       <b>Black Machine Bike Shop</b><br>
