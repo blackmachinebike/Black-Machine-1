@@ -151,6 +151,15 @@
       <div class="card"><div class="k">Total notas</div><div class="v" id="stTotal">0</div></div>
     </div>
     <div class="panel">
+      <h2>Corte de caja por periodo</h2>
+      <div class="row" style="margin-top:0">
+        <div><label>Desde</label><input type="date" id="cDesde" style="width:auto"></div>
+        <div><label>Hasta</label><input type="date" id="cHasta" style="width:auto"></div>
+      </div>
+      <div class="total-line">Total cobrado: <span id="cTotal">$0.00</span></div>
+      <div id="cDesglose" class="cards" style="margin-top:10px"></div>
+    </div>
+    <div class="panel">
       <h2>Últimas notas</h2>
       <div class="note-list" id="recientes"></div>
     </div>
@@ -437,6 +446,15 @@ const fTipo=document.getElementById('fTipo');
 const itemsBody=document.getElementById('itemsBody');
 document.getElementById('fFecha').valueAsDate=new Date();
 document.getElementById('fPago').innerHTML=PAGOS.map(p=>`<option>${p}</option>`).join('');
+// Corte de caja: por defecto del primer día del mes a hoy
+(function(){
+  const hoy=new Date();
+  const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  document.getElementById('cDesde').value=iso(new Date(hoy.getFullYear(),hoy.getMonth(),1));
+  document.getElementById('cHasta').value=iso(hoy);
+})();
+document.getElementById('cDesde').onchange=renderCorte;
+document.getElementById('cHasta').onchange=renderCorte;
 
 function addItemRow(desc='',cant=1,precio=''){
   const tr=document.createElement('tr');
@@ -559,6 +577,19 @@ function renderDashboard(){
   const r=document.getElementById('recientes');
   r.innerHTML=notas.slice(0,5).map(noteHTML).join('')||'<div class="empty">Aún no hay notas registradas.</div>';
   bindNoteClicks(r);
+  renderCorte();
+}
+
+// Corte de caja: total cobrado y desglose por método de pago en el rango
+const cobrado=n=>n.tipo==='apartado'?(+n.anticipo||0):(+n.total||0);
+function renderCorte(){
+  const d=document.getElementById('cDesde').value,h=document.getElementById('cHasta').value;
+  const sel=notas.filter(n=>{const f=(n.fecha||'').slice(0,10);return (!d||f>=d)&&(!h||f<=h);});
+  document.getElementById('cTotal').textContent=money(sel.reduce((s,n)=>s+cobrado(n),0));
+  const porPago={};PAGOS.forEach(p=>porPago[p]=0);
+  sel.forEach(n=>{const p=PAGOS.includes(n.pago)?n.pago:'Efectivo';porPago[p]+=cobrado(n);});
+  document.getElementById('cDesglose').innerHTML=PAGOS
+    .map(p=>`<div class="card"><div class="k">${p}</div><div class="v" style="font-size:18px">${money(porPago[p])}</div></div>`).join('');
 }
 
 // ---- Lista ----
