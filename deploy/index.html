@@ -235,6 +235,8 @@
 <div id="printArea" class="receipt"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
 /* =========================================================
    CONFIGURACIÓN DE LA NUBE (Supabase)
@@ -583,6 +585,7 @@ function abrirDetalle(id){
     ${n.tipo==='apartado'&&n.saldo>0?'<button class="btn sm" id="abonar">Registrar abono</button>':''}
     ${n.tipo==='taller'&&n.estado==='proceso'?'<button class="btn sm" id="entregar">Marcar entregado</button>':''}
     ${n.wa?`<button class="btn sm" id="waCli" style="background:#25D366">WhatsApp cliente</button>`:''}
+    <button class="btn sm" id="compartir" style="background:#0a7">Compartir / Enviar</button>
     <button class="btn sec sm" id="imprimir">Imprimir / PDF</button>
     <button class="btn sec sm" id="borrar">Eliminar</button>
     <button class="btn sec sm" onclick="document.getElementById('dlg').close()">Cerrar</button>`;
@@ -590,6 +593,31 @@ function abrirDetalle(id){
   document.getElementById('imprimir').onclick=()=>{
     document.getElementById('printArea').innerHTML=document.getElementById('dlgBody').innerHTML;
     window.print();
+  };
+  document.getElementById('compartir').onclick=async()=>{
+    if(!window.jspdf||!window.html2canvas){toast('Cargando… intenta de nuevo en un momento.');return;}
+    toast('Generando PDF…');
+    try{
+      const holder=document.createElement('div');
+      holder.className='receipt';
+      holder.style.cssText='position:fixed;left:-9999px;top:0;width:720px;background:#fff';
+      holder.innerHTML=document.getElementById('dlgBody').innerHTML;
+      document.body.appendChild(holder);
+      const canvas=await html2canvas(holder,{scale:2,backgroundColor:'#ffffff'});
+      document.body.removeChild(holder);
+      const {jsPDF}=window.jspdf;
+      const pdf=new jsPDF('p','mm','a4');
+      const w=210,h=canvas.height*w/canvas.width;
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,w,h);
+      const nombre=(n.folio||'nota')+'_'+(n.cliente||'').replace(/\s+/g,'_')+'.pdf';
+      const blob=pdf.output('blob');
+      const file=new File([blob],nombre,{type:'application/pdf'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:'Nota '+n.folio,text:tipoLabel[n.tipo]+' '+n.folio+' · '+TIENDA.nombre});
+      }else{
+        pdf.save(nombre);
+      }
+    }catch(e){if(e.name!=='AbortError')toast('No se pudo generar el PDF: '+e.message);}
   };
   const ab=document.getElementById('abonar');
   if(ab)ab.onclick=async()=>{
