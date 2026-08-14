@@ -1,24 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 440" aria-label="Black Machine Bike Shop" fill="none">
-  <!-- Icono robot + eslabon de cadena -->
-  <g transform="translate(28,68) scale(1.38)">
-    <g fill="#ececec">
-      <circle cx="110" cy="18" r="12"/><rect x="106" y="18" width="8" height="32"/>
-      <rect x="74" y="42" width="20" height="30" rx="2"/><rect x="126" y="42" width="20" height="30" rx="2"/>
-      <rect x="22" y="112" width="22" height="56" rx="7"/><rect x="176" y="112" width="22" height="56" rx="7"/>
-    </g>
-    <rect x="48" y="62" width="124" height="130" rx="18" fill="none" stroke="#ececec" stroke-width="16"/>
-    <g fill="#ececec">
-      <circle cx="84" cy="140" r="30"/><circle cx="136" cy="140" r="30"/>
-      <path d="M84 118 Q110 131 136 118 L136 162 Q110 149 84 162 Z"/>
-    </g>
-    <circle cx="84" cy="140" r="14" fill="#0b0d10"/><circle cx="136" cy="140" r="14" fill="#0b0d10"/>
-    <g fill="#ececec"><circle cx="84" cy="140" r="6"/><circle cx="136" cy="140" r="6"/></g>
-  </g>
-  <!-- Wordmark -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 340" aria-label="Black Machine Bike Shop" fill="none">
   <g fill="#ececec" font-family="'Arial Black','Helvetica Neue',Helvetica,Arial,sans-serif" font-weight="900">
-    <text x="430" y="212" font-size="150" letter-spacing="-4">BLACK</text>
-    <text x="430" y="372" font-size="150" letter-spacing="-4">MACHINE</text>
-    <text x="1252" y="150" font-size="74" letter-spacing="-2" text-anchor="end">BIKE</text>
-    <text x="1252" y="228" font-size="74" letter-spacing="-2" text-anchor="end">SHOP</text>
+    <text x="0" y="150" font-size="150" letter-spacing="-4">BLACK</text>
+    <text x="0" y="310" font-size="150" letter-spacing="-4">MACHINE</text>
+    <text x="852" y="88" font-size="74" letter-spacing="-2" text-anchor="end">BIKE</text>
+    <text x="852" y="166" font-size="74" letter-spacing="-2" text-anchor="end">SHOP</text>
   </g>
 </svg>
