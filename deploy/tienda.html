@@ -55,7 +55,26 @@
   .section-head .eyebrow::before{content:"";width:22px;height:1px;background:var(--accent)}
   .section-head h2{margin:8px 0 6px;font-size:32px;font-weight:800;letter-spacing:-.5px;text-transform:uppercase}
   .section-head p{margin:0;color:var(--muted);max-width:640px;line-height:1.55}
-  /* Hero */
+  /* Hero urbano (foto a pantalla) */
+  .hero-full{position:relative;min-height:76vh;display:flex;align-items:flex-end;overflow:hidden;border-bottom:2px solid var(--accent)}
+  .hero-photo{position:absolute;inset:0;background:#0a0c0f center/cover no-repeat;
+    /* Para foto real: reemplaza el background-image por url('assets/hero.jpg') */
+    background-image:radial-gradient(120% 130% at 72% 8%,#252a35 0%,#12151b 42%,#0a0c0f 78%);}
+  .hero-photo::before{content:"";position:absolute;top:-20%;left:38%;width:60%;height:150%;transform:skewX(-14deg);
+    background:linear-gradient(90deg,transparent,rgba(225,29,42,.16));border-left:3px solid rgba(225,29,42,.5);pointer-events:none}
+  .hero-ghost{position:absolute;right:-3%;bottom:-6%;width:min(66vw,780px);opacity:.09;pointer-events:none}
+  .hero-ghost svg{width:100%;height:auto;display:block}
+  .hero-grain{position:absolute;inset:0;pointer-events:none;opacity:.42;mix-blend-mode:overlay;
+    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+  .hero-overlay{position:relative;z-index:2;width:100%;max-width:1200px;margin:0 auto;padding:0 20px 52px}
+  .hero-overlay .kicker{font-family:var(--mono);text-transform:uppercase;letter-spacing:3px;font-size:12px;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:10px}
+  .hero-overlay .kicker::before{content:"";width:34px;height:2px;background:var(--accent)}
+  .hero-overlay h2{margin:12px 0 22px;font-size:clamp(56px,13vw,150px);line-height:.86;font-weight:800;text-transform:uppercase;letter-spacing:-3px;text-shadow:0 8px 40px rgba(0,0,0,.5)}
+  .hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{background:var(--accent);color:#fff;border:none;padding:13px 24px;border-radius:8px;cursor:pointer;font-weight:800;font-size:14px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px}
+  .btn.ghost{background:rgba(10,12,15,.4);border:1px solid var(--line);color:var(--txt);backdrop-filter:blur(4px)}
+  .btn.ghost:hover{border-color:var(--accent)}
+  /* Hero antiguo (no usado) */
   .hero{max-width:1200px;margin:0 auto;padding:34px 20px 10px}
   .hero-box{background:linear-gradient(120deg,#171a21,#0b0d11);border:1px solid var(--line);border-radius:16px;padding:38px;position:relative;overflow:hidden}
   .hero-box{background:var(--plate)}
@@ -214,53 +233,39 @@
 
 <!-- ============ INICIO ============ -->
 <div class="view active" id="view-inicio">
-  <section class="hero">
-    <div class="hero-box">
-      <span class="hero-cog" id="heroCog"></span>
-      <span class="eyebrow">Zapopan · Est. Bike Shop</span>
-      <h2>No vendemos bicicletas.<br><span style="color:var(--accent)">Construimos cultura sobre ruedas.</span></h2>
-      <p>Un espacio para la comunidad ciclista: los eventos que cubrimos, los atletas que impulsamos y el equipo que te lleva más lejos. Montaña, ciudad, pista, parque o carretera — la misma pasión.</p>
+  <section class="hero-full">
+    <div class="hero-photo" id="heroPhoto"><span class="hero-ghost" id="heroGhost"></span><span class="hero-grain"></span></div>
+    <div class="hero-overlay">
+      <span class="kicker">Zapopan, Jal. — BMX · MTB · Street</span>
+      <h2>Equípate</h2>
       <div class="hero-actions">
-        <button class="btn" data-view="tienda">Ir a la tienda</button>
-        <button class="btn ghost" data-view="eventos">Ver eventos</button>
-        <button class="btn ghost" data-view="atletas">Nuestros atletas</button>
+        <button class="btn" data-view="tienda">Ver la tienda</button>
+        <button class="btn ghost" data-view="eventos">Eventos</button>
+        <button class="btn ghost" data-view="atletas">Atletas</button>
       </div>
-      <div class="hero-tag">“Si lleva ese nombre, está hecho para rodar de verdad.”</div>
     </div>
   </section>
 
-  <section class="values">
-    <div class="values-inner">
-      <div class="val"><span class="vk">Autenticidad</span><span class="vv">Hacemos las cosas con honestidad y pasión.</span></div>
-      <div class="val"><span class="vk">Calidad</span><span class="vv">Los detalles marcan la diferencia.</span></div>
-      <div class="val"><span class="vk">Comunidad</span><span class="vv">El ciclismo se disfruta más cuando se comparte.</span></div>
-      <div class="val"><span class="vk">Evolución</span><span class="vv">Siempre buscamos mejorar, aprender e innovar.</span></div>
-      <div class="val"><span class="vk">Respeto</span><span class="vv">Por las personas, el deporte y el camino.</span></div>
-    </div>
-  </section>
-
-  <div class="chain"></div>
-
-  <div class="teaser-head"><h3>Eventos que cubrimos</h3><button class="more" data-view="eventos">Ver todos →</button></div>
+  <div class="teaser-head"><h3>Eventos</h3><button class="more" data-view="eventos">Ver todos →</button></div>
   <section class="section"><div class="ev-grid" id="evTeaser"></div></section>
 
   <div class="chain"></div>
 
-  <div class="teaser-head"><h3>Atletas que impulsamos</h3><button class="more" data-view="atletas">Ver todos →</button></div>
+  <div class="teaser-head"><h3>Atletas</h3><button class="more" data-view="atletas">Ver todos →</button></div>
   <section class="section"><div class="at-grid" id="atTeaser"></div></section>
 
   <div class="chain"></div>
 
-  <div class="teaser-head"><h3>Destacados de la tienda</h3><button class="more" data-view="tienda">Ver catálogo →</button></div>
+  <div class="teaser-head"><h3>Destacados</h3><button class="more" data-view="tienda">Ver catálogo →</button></div>
   <section class="section"><div class="grid" id="prodTeaser"></div></section>
 </div>
 
 <!-- ============ EVENTOS ============ -->
 <div class="view" id="view-eventos">
   <div class="section-head">
-    <div class="eyebrow">Comunidad</div>
-    <h2>Eventos que cubrimos</h2>
-    <p>Estamos donde se rueda. Competencias, rodadas y jams que apoyamos, cubrimos y vivimos junto a la comunidad.</p>
+    <div class="eyebrow">Agenda</div>
+    <h2>Eventos</h2>
+    <p>Competencias, rodadas y jams. Cobertura, patrocinio y lo que viene.</p>
   </div>
   <section class="section"><div class="ev-grid" id="evGrid"></div></section>
 </div>
@@ -268,9 +273,9 @@
 <!-- ============ ATLETAS ============ -->
 <div class="view" id="view-atletas">
   <div class="section-head">
-    <div class="eyebrow">Familia Black Machine</div>
-    <h2>Atletas que impulsamos</h2>
-    <p>Riders que representan lo que somos: esfuerzo, autenticidad y pasión por rodar. Ellos llevan el nombre, nosotros los respaldamos.</p>
+    <div class="eyebrow">Equipo</div>
+    <h2>Atletas</h2>
+    <p>Los riders que representan a la tienda en cada disciplina.</p>
   </div>
   <section class="section"><div class="at-grid" id="atGrid"></div></section>
 </div>
@@ -278,9 +283,9 @@
 <!-- ============ TIENDA ============ -->
 <div class="view" id="view-tienda">
   <div class="section-head">
-    <div class="eyebrow">Equípate</div>
+    <div class="eyebrow">Catálogo</div>
     <h2>Tienda</h2>
-    <p>Cuadros, tijeras, manubrios, refacciones y accesorios de las marcas que de verdad ruedan. Aparta en línea y confirma tu pedido por WhatsApp.</p>
+    <p>Cuadros, tijeras, manubrios, refacciones y accesorios. Aparta en línea y confirma por WhatsApp.</p>
   </div>
   <div class="section">
     <div class="filter-label">Marca</div>
@@ -302,12 +307,6 @@
 </div>
 
 <footer>
-  <div class="promise">
-    <div class="promise-inner">
-      <span class="pk">Nuestra promesa</span>
-      <p>Acompañar a cada ciclista con productos, servicio y conocimiento que inspiren confianza para seguir avanzando. No seguimos tendencias: construimos una identidad que permanece.</p>
-    </div>
-  </div>
   <div class="fwrap">
     <div><b>Black Machine Bike Shop</b><br>Av. Tesistán 704A, San José del Bajío,<br>Zapopan, Jalisco. CP 45140</div>
     <div><b>Contacto</b><br>WhatsApp: <a id="waFoot" target="_blank" rel="noopener">33 2589 9142</a><br>Horario: Lun–Sáb 10:00–19:00</div>
@@ -377,6 +376,17 @@ function chainring(size){
     ${holes}<circle cx="${cx}" cy="${cy}" r="16" fill="none" stroke="#c3c9d4" stroke-width="8"/></svg>`;
 }
 const cog=$('#heroCog'); if(cog) cog.innerHTML=chainring(280);
+/* Bici BMX de fondo (line-art) */
+const ghost=$('#heroGhost');
+if(ghost) ghost.innerHTML=`<svg viewBox="0 0 420 250" fill="none" stroke="#c3c9d4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="95" cy="180" r="60"/><circle cx="325" cy="180" r="60"/>
+  <circle cx="95" cy="180" r="7" fill="#c3c9d4"/><circle cx="325" cy="180" r="7" fill="#c3c9d4"/>
+  <circle cx="200" cy="180" r="11"/>
+  <path d="M200 180 95 180M200 180 250 110M95 180 250 110M250 110 268 118M200 180 268 118M268 118 325 180"/>
+  <path d="M250 110 241 90M223 90 259 90"/>
+  <path d="M268 118 262 86 302 78"/>
+  <path d="M200 180 228 150"/>
+</svg>`;
 
 /* --- Íconos --- */
 const S='<svg viewBox="0 0 24 24" fill="none" stroke="#e11d2a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">';

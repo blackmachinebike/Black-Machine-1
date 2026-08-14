@@ -24,8 +24,10 @@ instalación ni servidor. Los datos se guardan localmente en el navegador
 
 - **`tienda.html`** — **sitio completo de Black Machine** (una sola página, sin
   servidor). Navegación entre 4 secciones:
-  - **Inicio:** hero con la voz de marca, los 5 pilares, la frase insignia y
-    adelantos de eventos, atletas y productos destacados.
+  - **Inicio:** hero a pantalla (estilo urbano/BMX) con una imagen potente y
+    accesos directos, seguido de adelantos de eventos, atletas y destacados.
+    Para poner una foto real de fondo, define `background-image:url('assets/hero.jpg')`
+    en `.hero-photo` dentro de `tienda.html`.
   - **Eventos:** los eventos que la marca cubre / patrocina, con fecha, lugar,
     disciplina y etiqueta (Cobertura / Patrocinio / Próximo). Edita el arreglo
     `EVENTS` (id, title, disc, date, loc, kind, desc).
