@@ -30,6 +30,10 @@
   /* Header + Nav */
   header{background:linear-gradient(90deg,#000,#141414);border-bottom:1px solid var(--line);box-shadow:0 1px 0 var(--accent);padding:10px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:20;flex-wrap:wrap}
   header .logo{width:42px;height:42px;display:flex;align-items:center;justify-content:center;line-height:0;cursor:pointer}
+  .brand{display:flex;align-items:center;gap:14px;text-decoration:none}
+  .brand-img{height:48px;width:auto;max-width:min(64vw,340px);display:none}
+  .brand-fallback{display:flex;align-items:center;gap:14px}
+  .brand-text h1{margin:0}
   header h1{font-size:16px;margin:0;font-weight:800;letter-spacing:.2px}
   header small{color:var(--muted);display:block;font-weight:500;font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px}
   header .spacer{flex:1}
@@ -188,11 +192,16 @@
 </head>
 <body>
 <header>
-  <span class="logo" id="brandLogo" data-view="inicio"></span>
-  <div>
-    <h1>Black Machine <span style="color:var(--accent)">Bike Shop</span></h1>
-    <small>Cultura sobre ruedas · Zapopan, Jalisco</small>
-  </div>
+  <a class="brand" data-view="inicio" href="#" aria-label="Inicio — Black Machine Bike Shop">
+    <img id="brandImg" class="brand-img" src="assets/logo.png" alt="Black Machine Bike Shop">
+    <span class="brand-fallback" id="brandFallback">
+      <span class="logo" id="brandLogo"></span>
+      <span class="brand-text">
+        <h1>Black Machine <span style="color:var(--accent)">Bike Shop</span></h1>
+        <small>Cultura sobre ruedas · Zapopan, Jalisco</small>
+      </span>
+    </span>
+  </a>
   <div class="spacer"></div>
   <nav id="nav">
     <button data-view="inicio" class="active">Inicio</button>
@@ -343,6 +352,11 @@ function logoMark(ink,paper,size){
 }
 $('#brandLogo').innerHTML=logoMark('#f2f2f2','#000',42);
 $('#waFoot').href='https://wa.me/'+CFG.whatsapp;
+/* Usa assets/logo.png si existe; si no, ícono+texto de respaldo */
+(function(){const img=$('#brandImg'),fb=$('#brandFallback');
+  img.onload=()=>{if(img.naturalWidth){img.style.display='block';fb.style.display='none';}};
+  img.onerror=()=>{img.style.display='none';fb.style.display='flex';};
+})();
 
 /* --- Firma: plato/chainring dentado --- */
 function chainring(size){
