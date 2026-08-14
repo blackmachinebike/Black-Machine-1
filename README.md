@@ -22,14 +22,23 @@ instalación ni servidor. Los datos se guardan localmente en el navegador
 
 ## Tienda en línea (e-commerce)
 
-- **`tienda.html`** — catálogo público de la tienda. Muestra bicicletas, cascos,
-  accesorios, refacciones y ropa organizados por categoría, con buscador,
-  ordenamiento y carrito de compra. El pedido se envía por **WhatsApp**
-  (`33 2589 9142`) con el detalle y total; ahí se confirma disponibilidad,
-  envío/recolección y forma de pago. El carrito se guarda en `localStorage`,
-  no requiere servidor ni pasarela de pago. Para editar el catálogo cambia el
-  arreglo `PRODUCTS` dentro del archivo (id, categoría, nombre, descripción,
-  precio, `price_old` para ofertas, `tag` y `stock`).
+- **`tienda.html`** — catálogo público de la tienda **BMX**. Productos separados
+  por **marca** (Cult, Demolition, Sunday, Kink, Summit, Odyssey, Éclat, Sando,
+  Chepe) y por **categoría de producto** (bicis completas, cuadros, tijeras,
+  manubrios, potencias, puños, pedales, bielas, sprocket/cadena, llantas,
+  rines/masas, frenos, asiento/poste, pegas, accesorios), con doble filtro,
+  buscador, ordenamiento y carrito. El pedido se envía por **WhatsApp**
+  (`33 2589 9142`) con el detalle (marca + producto) y total; ahí se confirma
+  disponibilidad, envío/recolección y forma de pago. El carrito se guarda en
+  `localStorage`, no requiere servidor ni pasarela de pago.
+
+  **Editar el catálogo:** cambia el arreglo `PRODUCTS` dentro del archivo. Cada
+  producto tiene: `id`, `brand` (marca), `cat` (categoría, debe coincidir con un
+  `id` de la lista `CATS`), `name`, `desc`, `price`, opcional `price_old` (para
+  ofertas, muestra precio tachado), `tag` (`Nuevo`/`Top`/`Oferta`) y `stock`
+  (`true`/`false`). Para agregar una marca o categoría nueva, añádela a las
+  listas `BRANDS` o `CATS`. **Los precios son de referencia de mercado en MXN;
+  ajústalos a tu inventario real.**
 
 ## Versiones
 

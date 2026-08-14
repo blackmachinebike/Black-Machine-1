@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Black Machine Bike Shop — Tienda en línea</title>
-<meta name="description" content="Bicicletas, accesorios, refacciones y ropa de ciclismo. Black Machine Bike Shop, Zapopan, Jalisco.">
+<title>Black Machine Bike Shop — Tienda BMX</title>
+<meta name="description" content="Tienda BMX: cuadros, tijeras, manubrios, puños, pedales y refacciones de las marcas Cult, Demolition, Sunday, Kink, Summit y más. Zapopan, Jalisco.">
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
@@ -23,28 +23,30 @@
   .cart-btn:hover{border-color:var(--accent)}
   .cart-count{position:absolute;top:-8px;right:-8px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;min-width:20px;height:20px;border-radius:20px;display:flex;align-items:center;justify-content:center;padding:0 5px}
   .cart-count.hidden{display:none}
-  /* Hero */
   .hero{max-width:1200px;margin:0 auto;padding:34px 20px 10px}
   .hero-box{background:linear-gradient(120deg,#171a21,#0b0d11);border:1px solid var(--line);border-radius:16px;padding:34px;position:relative;overflow:hidden}
   .hero-box::after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(225,29,42,.25),transparent 70%)}
   .hero-box h2{margin:0 0 10px;font-size:30px;line-height:1.15}
-  .hero-box p{margin:0 0 18px;color:var(--muted);max-width:560px}
+  .hero-box p{margin:0 0 18px;color:var(--muted);max-width:580px}
   .hero-box .btn{background:var(--accent);color:#fff;border:none;padding:12px 22px;border-radius:9px;cursor:pointer;font-weight:800;font-size:15px}
-  /* Layout */
   .wrap{max-width:1200px;margin:0 auto;padding:16px 20px 60px}
-  .cats{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 22px}
-  .cats button{background:var(--panel);color:var(--muted);border:1px solid var(--line);padding:9px 16px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:700}
-  .cats button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+  .filter-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:800;margin:16px 0 8px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chips button{background:var(--panel);color:var(--muted);border:1px solid var(--line);padding:8px 15px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:700}
+  .chips button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .chips.brands button.active{background:#fff;color:#000;border-color:#fff}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:20px 0 6px}
   .toolbar input,.toolbar select{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:10px 12px;border-radius:9px;font-size:14px}
   .toolbar input{flex:1;min-width:180px}
+  .count{color:var(--muted);font-size:13px;margin:10px 0 16px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
   .prod{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
   .prod:hover{border-color:var(--accent);transform:translateY(-2px)}
   .prod .ph{aspect-ratio:1/1;background:radial-gradient(circle at 50% 40%,#232733,#12151b);display:flex;align-items:center;justify-content:center;position:relative}
-  .prod .ph svg{width:74px;height:74px;opacity:.85}
+  .prod .ph svg{width:70px;height:70px;opacity:.85}
   .prod .tag{position:absolute;top:10px;left:10px;background:var(--accent);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px}
   .prod .tag.out{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+  .prod .brand{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:.6px}
   .prod .info{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
   .prod .cat{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
   .prod .name{font-weight:700;font-size:15px;line-height:1.25}
@@ -55,7 +57,6 @@
   .add:hover{filter:brightness(1.08)}
   .add:disabled{background:var(--panel2);color:var(--muted);cursor:not-allowed}
   .empty{text-align:center;color:var(--muted);padding:50px;grid-column:1/-1}
-  /* Drawer */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
   .overlay.open{opacity:1;pointer-events:auto}
   .drawer{position:fixed;top:0;right:0;height:100%;width:400px;max-width:92vw;background:var(--panel);border-left:1px solid var(--line);z-index:40;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column}
@@ -69,6 +70,7 @@
   .citem .cph svg{width:32px;height:32px;opacity:.85}
   .citem .cinfo{flex:1;min-width:0}
   .citem .cname{font-weight:700;font-size:14px}
+  .citem .cbrand{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
   .citem .cprice{color:var(--muted);font-size:13px;margin-top:2px}
   .qty{display:flex;align-items:center;gap:8px;margin-top:8px}
   .qty button{width:26px;height:26px;border-radius:7px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);cursor:pointer;font-weight:800;font-size:15px;line-height:1}
@@ -81,7 +83,6 @@
   .foot .btn{width:100%;background:var(--green);color:#04210f;border:none;padding:13px;border-radius:10px;cursor:pointer;font-weight:800;font-size:15px;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
   .foot .btn:hover{filter:brightness(1.06)}
   .foot .note{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px}
-  /* Footer */
   footer{border-top:1px solid var(--line);margin-top:40px;background:#0b0d11}
   .fwrap{max-width:1200px;margin:0 auto;padding:26px 20px;display:flex;gap:30px;flex-wrap:wrap;color:var(--muted);font-size:13px}
   .fwrap b{color:var(--txt)}
@@ -95,7 +96,7 @@
   <span class="logo" id="brandLogo"></span>
   <div>
     <h1>Black Machine <span style="color:var(--accent)">Bike Shop</span></h1>
-    <small>Tienda en línea · Zapopan, Jalisco</small>
+    <small>Tienda BMX · Zapopan, Jalisco</small>
   </div>
   <div class="spacer"></div>
   <button class="cart-btn" id="cartBtn">
@@ -106,14 +107,17 @@
 
 <section class="hero">
   <div class="hero-box">
-    <h2>Todo para rodar<br><span style="color:var(--accent)">a tu máxima máquina</span></h2>
-    <p>Bicicletas, accesorios, refacciones y ropa de ciclismo. Aparta en línea y recoge en tienda, o pide envío. Pago al confirmar tu pedido por WhatsApp.</p>
+    <h2>Arma tu BMX<br><span style="color:var(--accent)">con lo mejor del mercado</span></h2>
+    <p>Cuadros, tijeras, manubrios, puños, pedales y refacciones de las marcas que ruedan: Cult, Demolition, Sunday, Kink, Summit y más. Aparta en línea y recoge en tienda, o pide envío. Pago al confirmar por WhatsApp.</p>
     <button class="btn" onclick="document.querySelector('.wrap').scrollIntoView({behavior:'smooth'})">Ver catálogo</button>
   </div>
 </section>
 
 <div class="wrap">
-  <div class="cats" id="cats"></div>
+  <div class="filter-label">Marca</div>
+  <div class="chips brands" id="brands"></div>
+  <div class="filter-label">Categoría</div>
+  <div class="chips" id="cats"></div>
   <div class="toolbar">
     <input id="search" placeholder="Buscar producto…">
     <select id="sort">
@@ -123,6 +127,7 @@
       <option value="name">Nombre A–Z</option>
     </select>
   </div>
+  <div class="count" id="count"></div>
   <div class="grid" id="grid"></div>
 </div>
 
@@ -144,7 +149,6 @@
   </div>
 </footer>
 
-<!-- Carrito -->
 <div class="overlay" id="overlay"></div>
 <aside class="drawer" id="drawer" aria-label="Carrito">
   <div class="dh">
@@ -159,7 +163,7 @@
 
 <script>
 const CFG={ nombre:'Black Machine Bike Shop', whatsapp:'523325899142' };
-const CART_KEY='bm_tienda_cart_v1';
+const CART_KEY='bm_tienda_cart_v2';
 const money=n=>'$'+n.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0});
 
 /* --- Logo --- */
@@ -180,84 +184,176 @@ function logoMark(ink,paper,size){
 document.getElementById('brandLogo').innerHTML=logoMark('#f2f2f2','#000',44);
 document.getElementById('waFoot').href='https://wa.me/'+CFG.whatsapp;
 
-/* --- Íconos por categoría (placeholder de imagen) --- */
+/* --- Ícono genérico de refacción (placeholder de imagen) --- */
+const S='<svg viewBox="0 0 24 24" fill="none" stroke="#e11d2a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">';
 const ICONS={
-  bicis:`<svg viewBox="0 0 24 24" fill="none" stroke="#e11d2a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 17.5 9 6h6l-3.5 11.5M9 6 7 8.5m8-2.5 2 3.5"/></svg>`,
-  accesorios:`<svg viewBox="0 0 24 24" fill="none" stroke="#e11d2a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a8 8 0 0 0 8-8V6l-8-3-8 3v8a8 8 0 0 0 8 8Z"/><path d="m9 12 2 2 4-4"/></svg>`,
-  refacciones:`<svg viewBox="0 0 24 24" fill="none" stroke="#e11d2a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M4.2 4.2l2.1 2.1m11.4 11.4 2.1 2.1M2 12h3m14 0h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>`,
-  ropa:`<svg viewBox="0 0 24 24" fill="none" stroke="#e11d2a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 6l2 3 2-1v10h8V8l2 1 2-3-4-3-2 2H10L8 3Z"/></svg>`,
-  cascos:`<svg viewBox="0 0 24 24" fill="none" stroke="#e11d2a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13a9 9 0 0 1 18 0v1H3v-1Z"/><path d="M3 14v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2M7 13l2-6m4 6 2-6"/></svg>`
+  completas:S+'<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 17.5 9 6h6l-3.5 11.5M9 6 7 8.5m8-2.5 2 3.5"/></svg>',
+  cuadros:S+'<path d="M4 17 9 7h7l3 5-6 5H4Zm5-10 6 10"/></svg>',
+  tijeras:S+'<path d="M12 3v8m0 0-4 10m4-10 4 10M9 5h6"/></svg>',
+  manubrios:S+'<path d="M3 12h18M6 12v4m12-4v4M9 12V9m6 3V9"/></svg>',
+  potencias:S+'<rect x="4" y="9" width="16" height="6" rx="2"/><path d="M8 9V7m8 2V7"/></svg>',
+  punos:S+'<rect x="6" y="8" width="12" height="8" rx="4"/><path d="M6 12H3m18 0h-3"/></svg>',
+  pedales:S+'<rect x="4" y="9" width="10" height="6" rx="1"/><path d="M14 12h6M17 9v6"/></svg>',
+  bielas:S+'<circle cx="12" cy="12" r="2.5"/><path d="M12 12 7 19m5-7 6-5"/><circle cx="7" cy="19" r="1.5"/></svg>',
+  transmision:S+'<circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4m0 12v4m10-10h-4M6 12H2"/></svg>',
+  llantas:S+'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3m0 12v3m9-9h-3M6 12H3"/></svg>',
+  rines:S+'<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18m-3.6-6.4L6.6 18.4m0-12.8 10.8 12.8"/></svg>',
+  frenos:S+'<circle cx="12" cy="12" r="8"/><path d="M12 4v4m0 8v4m8-8h-4M8 12H4"/><circle cx="12" cy="12" r="2"/></svg>',
+  asiento:S+'<path d="M4 14c4-3 12-3 16 0M12 14v6m-3 0h6"/></svg>',
+  pegas:S+'<rect x="9" y="5" width="6" height="14" rx="3"/><path d="M15 9h4m-4 6h4"/></svg>',
+  accesorios:S+'<path d="M12 22a8 8 0 0 0 8-8V6l-8-3-8 3v8a8 8 0 0 0 8 8Z"/><path d="m9 12 2 2 4-4"/></svg>'
 };
 
-/* --- Catálogo --- */
+/* --- Marcas y categorías --- */
+const BRANDS=['Cult','Demolition','Sunday','Kink','Summit','Odyssey','Éclat','Sando','Chepe'];
 const CATS=[
-  {id:'todos',label:'Todos'},
-  {id:'bicis',label:'Bicicletas'},
-  {id:'cascos',label:'Cascos'},
-  {id:'accesorios',label:'Accesorios'},
-  {id:'refacciones',label:'Refacciones'},
-  {id:'ropa',label:'Ropa'}
+  {id:'completas',label:'Bicis completas'},
+  {id:'cuadros',label:'Cuadros'},
+  {id:'tijeras',label:'Tijeras'},
+  {id:'manubrios',label:'Manubrios'},
+  {id:'potencias',label:'Potencias'},
+  {id:'punos',label:'Puños'},
+  {id:'pedales',label:'Pedales'},
+  {id:'bielas',label:'Bielas'},
+  {id:'transmision',label:'Sprocket / Cadena'},
+  {id:'llantas',label:'Llantas'},
+  {id:'rines',label:'Rines / Masas'},
+  {id:'frenos',label:'Frenos'},
+  {id:'asiento',label:'Asiento / Poste'},
+  {id:'pegas',label:'Pegas'},
+  {id:'accesorios',label:'Accesorios'}
 ];
+const catLabel=id=>(CATS.find(c=>c.id===id)||{}).label||'';
+
+/* --- Catálogo (precios de mercado MXN, ajústalos a tu inventario) --- */
 const PRODUCTS=[
-  {id:'b1',cat:'bicis',name:'MTB Rodada 29 Aluminio 21v',desc:'Cuadro de aluminio, frenos de disco, 21 velocidades. Ideal para montaña y ciudad.',price:8990,tag:'Nuevo',stock:true},
-  {id:'b2',cat:'bicis',name:'Bici de Ruta Carbono 700c',desc:'Cuadro de carbono, grupo de 22 velocidades. Ligera y veloz para asfalto.',price:24500,tag:'Top',stock:true},
-  {id:'b3',cat:'bicis',name:'Bici Urbana Rodada 26 6v',desc:'Comodidad para el día a día. Canastilla y guardabarros incluidos.',price:5490,stock:true},
-  {id:'b4',cat:'bicis',name:'BMX Freestyle Rodada 20',desc:'Cuadro reforzado, rotor 360°. Para trucos y pista.',price:4290,stock:true},
-  {id:'b5',cat:'bicis',name:'Bici Infantil Rodada 16',desc:'Con rueditas de entrenamiento. Para niños de 4 a 6 años.',price:2990,stock:false},
-  {id:'b6',cat:'bicis',name:'E-Bike Urbana 250W',desc:'Motor de 250W, autonomía 45 km, batería extraíble.',price:32900,tag:'Nuevo',stock:true},
+  /* Bicis completas */
+  {id:'p001',brand:'Sunday',cat:'completas',name:'Sunday Primer 20.5" 2024',desc:'Completa de acero cromoly, ideal para arrancar en street/park.',price:9800,tag:'Nuevo',stock:true},
+  {id:'p002',brand:'Cult',cat:'completas',name:'Cult Access 20.5" 2024',desc:'Cromoly, llantas 2.4", lista para rodar de fábrica.',price:11900,tag:'Top',stock:true},
+  {id:'p003',brand:'Kink',cat:'completas',name:'Kink Curb 20" 2024',desc:'Entrada sólida, hi-ten reforzado, freno trasero U.',price:7200,stock:true},
+  {id:'p004',brand:'Summit',cat:'completas',name:'Summit AM 20" Completa',desc:'Económica y resistente para empezar en el BMX.',price:4990,stock:true},
+  {id:'p005',brand:'Sunday',cat:'completas',name:'Sunday Blueprint 18"',desc:'Para riders jóvenes, geometría cómoda cromoly.',price:8600,stock:false},
 
-  {id:'c1',cat:'cascos',name:'Casco MTB con Visera',desc:'Ventilación de 18 canales, ajuste de dial. Certificado.',price:890,stock:true},
-  {id:'c2',cat:'cascos',name:'Casco Ruta Aero',desc:'Ligero y aerodinámico, 22 ventilas. Talla ajustable.',price:1450,tag:'Oferta',price_old:1790,stock:true},
-  {id:'c3',cat:'cascos',name:'Casco Infantil',desc:'Protección extra, diseños divertidos. Ajuste seguro.',price:490,stock:true},
+  /* Cuadros */
+  {id:'p010',brand:'Cult',cat:'cuadros',name:'Cuadro Cult Shorty 20.75"',desc:'100% cromoly, trasero ajustable, cabezal integrado.',price:6900,tag:'Top',stock:true},
+  {id:'p011',brand:'Demolition',cat:'cuadros',name:'Cuadro Demolition Bird 21"',desc:'Cromoly full, ligero y rígido para street.',price:6500,stock:true},
+  {id:'p012',brand:'Sunday',cat:'cuadros',name:'Cuadro Sunday Street Sweeper 21"',desc:'Firma de Jake Seeley, tubos cónicos cromoly.',price:7200,tag:'Nuevo',stock:true},
+  {id:'p013',brand:'Kink',cat:'cuadros',name:'Cuadro Kink Williams 20.75"',desc:'Cromoly, geometría versátil park/street.',price:5900,stock:true},
+  {id:'p014',brand:'Summit',cat:'cuadros',name:'Cuadro Summit 20.5" Hi-Ten',desc:'Opción económica para armar tu primera bici.',price:2600,stock:true},
 
-  {id:'a1',cat:'accesorios',name:'Luz LED Recargable USB (par)',desc:'Delantera y trasera, 5 modos, batería recargable.',price:349,stock:true},
-  {id:'a2',cat:'accesorios',name:'Candado U de Acero',desc:'Alta resistencia al corte, 2 llaves. Soporte incluido.',price:459,stock:true},
-  {id:'a3',cat:'accesorios',name:'Bomba de Aire Portátil',desc:'Compatible Presta/Schrader, manómetro integrado.',price:389,stock:true},
-  {id:'a4',cat:'accesorios',name:'Portánfora + Bidón 750ml',desc:'Aluminio, fácil instalación. Bidón libre de BPA.',price:229,stock:true},
-  {id:'a5',cat:'accesorios',name:'Ciclocomputador Inalámbrico',desc:'Velocidad, distancia, tiempo y odómetro.',price:599,tag:'Oferta',price_old:749,stock:true},
-  {id:'a6',cat:'accesorios',name:'Guantes de Ciclismo Gel',desc:'Acolchado de gel, transpirables. Tallas M–XL.',price:299,stock:true},
+  /* Tijeras */
+  {id:'p020',brand:'Demolition',cat:'tijeras',name:'Tijera Demolition Mark Ⅳ',desc:'Cromoly, offset 32mm, pre-taladrada.',price:2900,stock:true},
+  {id:'p021',brand:'Cult',cat:'tijeras',name:'Tijera Cult Sect IC',desc:'Steerer integrado, cromoly, muy ligera.',price:2800,tag:'Top',stock:true},
+  {id:'p022',brand:'Sunday',cat:'tijeras',name:'Tijera Sunday Odyssey R32',desc:'Colaboración Odyssey, refuerzo pre-load.',price:2700,stock:true},
+  {id:'p023',brand:'Éclat',cat:'tijeras',name:'Tijera Éclat Regor',desc:'Cromoly termotratado, offset 30mm.',price:2600,stock:false},
 
-  {id:'r1',cat:'refacciones',name:'Cámara 29" Válvula Presta',desc:'Butilo de alta calidad. Compatible con rodada 29.',price:129,stock:true},
-  {id:'r2',cat:'refacciones',name:'Llanta MTB 29x2.10',desc:'Tacos agresivos, buen agarre en terreno mixto.',price:449,stock:true},
-  {id:'r3',cat:'refacciones',name:'Cadena 11 Velocidades',desc:'Tratamiento anticorrosión, incluye eslabón rápido.',price:389,stock:true},
-  {id:'r4',cat:'refacciones',name:'Juego de Balatas de Disco',desc:'Compatibles Shimano/Tektro. Frenado potente.',price:189,stock:true},
-  {id:'r5',cat:'refacciones',name:'Pedales de Aluminio con Pines',desc:'Amplia plataforma, rodamientos sellados.',price:349,stock:false},
+  /* Manubrios */
+  {id:'p030',brand:'Cult',cat:'manubrios',name:'Manubrio Cult Dak V2 9.5"',desc:'4 piezas cromoly, buen backsweep.',price:1450,stock:true},
+  {id:'p031',brand:'Demolition',cat:'manubrios',name:'Manubrio Demolition TMOR 9.7"',desc:'Cromoly, altura alta para street.',price:1600,tag:'Nuevo',stock:true},
+  {id:'p032',brand:'Sunday',cat:'manubrios',name:'Manubrio Sunday Ill 9.3"',desc:'Ligero, 4 piezas, ideal park.',price:1500,stock:true},
+  {id:'p033',brand:'Kink',cat:'manubrios',name:'Manubrio Kink Tower 9"',desc:'Cromoly resistente, geometría clásica.',price:1250,stock:true},
 
-  {id:'j1',cat:'ropa',name:'Jersey de Ciclismo Manga Corta',desc:'Tela transpirable, 3 bolsillos traseros. Tallas S–XL.',price:690,stock:true},
-  {id:'j2',cat:'ropa',name:'Short con Badana',desc:'Badana de gel, licra compresiva. Máxima comodidad.',price:790,stock:true},
-  {id:'j3',cat:'ropa',name:'Lentes Deportivos UV400',desc:'Protección UV, lentes intercambiables. Antiempaño.',price:459,tag:'Oferta',price_old:590,stock:true}
+  /* Potencias */
+  {id:'p040',brand:'Odyssey',cat:'potencias',name:'Potencia Odyssey Quill Ⅴ2',desc:'Front load, aluminio 6061, muy ligera.',price:1200,stock:true},
+  {id:'p041',brand:'Demolition',cat:'potencias',name:'Potencia Demolition Rig',desc:'Top load, aluminio forjado.',price:1150,stock:true},
+  {id:'p042',brand:'Cult',cat:'potencias',name:'Potencia Cult OS',desc:'Front load, hardware cromoly incluido.',price:1250,tag:'Top',stock:true},
+
+  /* Puños */
+  {id:'p050',brand:'Cult',cat:'punos',name:'Puños Cult Vans',desc:'Colaboración Vans, waffle, con tapones.',price:349,tag:'Top',stock:true},
+  {id:'p051',brand:'Odyssey',cat:'punos',name:'Puños Odyssey Broc',desc:'Firma Broc Raiford, flangeless.',price:320,stock:true},
+  {id:'p052',brand:'Éclat',cat:'punos',name:'Puños Éclat Filter',desc:'Compuesto suave, buen agarre.',price:299,stock:true},
+  {id:'p053',brand:'Demolition',cat:'punos',name:'Puños Demolition Axes',desc:'Doble densidad, con tapones de aluminio.',price:359,stock:true},
+
+  /* Pedales */
+  {id:'p060',brand:'Demolition',cat:'pedales',name:'Pedales Demolition Trooper',desc:'Nylon reforzado, 9 pines por lado.',price:520,stock:true},
+  {id:'p061',brand:'Odyssey',cat:'pedales',name:'Pedales Odyssey Twisted PC',desc:'Los clásicos de plástico, ligeros y baratos.',price:229,tag:'Oferta',price_old:299,stock:true},
+  {id:'p062',brand:'Cult',cat:'pedales',name:'Pedales Cult Dak PC',desc:'Plataforma amplia, cuerpo de nylon.',price:349,stock:true},
+  {id:'p063',brand:'Éclat',cat:'pedales',name:'Pedales Éclat Surge Alloy',desc:'Aluminio CNC, rodamientos sellados.',price:1290,stock:false},
+
+  /* Bielas */
+  {id:'p070',brand:'Demolition',cat:'bielas',name:'Bielas Demolition Refuse 24mm',desc:'Cromoly 3 piezas, tornillería incluida.',price:2600,tag:'Top',stock:true},
+  {id:'p071',brand:'Cult',cat:'bielas',name:'Bielas Cult Match V3 22mm',desc:'Cromoly termotratado, eje 22mm.',price:2900,stock:true},
+  {id:'p072',brand:'Kink',cat:'bielas',name:'Bielas Kink Pillar 24mm',desc:'3 piezas cromoly, buena relación precio.',price:2200,stock:true},
+
+  /* Sprocket / Cadena */
+  {id:'p080',brand:'Cult',cat:'transmision',name:'Sprocket Cult OS 25t',desc:'Aluminio 7075, guarda protectora integrada.',price:650,stock:true},
+  {id:'p081',brand:'Demolition',cat:'transmision',name:'Sprocket Demolition Rotator 28t',desc:'Guardado tipo guard, ligero.',price:720,stock:true},
+  {id:'p082',brand:'Éclat',cat:'transmision',name:'Cadena Éclat Stroke Half-Link',desc:'Media eslabón, muy resistente.',price:389,stock:true},
+  {id:'p083',brand:'Sando',cat:'transmision',name:'Cadena Sando 1/8"',desc:'Cadena estándar reforzada para BMX.',price:189,tag:'Oferta',price_old:249,stock:true},
+
+  /* Llantas */
+  {id:'p090',brand:'Cult',cat:'llantas',name:'Llanta Cult Vans Tire 20x2.40"',desc:'Diseño Vans waffle, buen agarre.',price:650,tag:'Top',stock:true},
+  {id:'p091',brand:'Demolition',cat:'llantas',name:'Llanta Demolition Momentum 20x2.35"',desc:'Compuesto rápido para park/street.',price:680,stock:true},
+  {id:'p092',brand:'Sunday',cat:'llantas',name:'Llanta Sunday Current 20x2.40"',desc:'Alta durabilidad, pared reforzada.',price:600,stock:true},
+  {id:'p093',brand:'Chepe',cat:'llantas',name:'Llanta Chepe Street 20x2.25"',desc:'Opción económica confiable.',price:320,stock:true},
+
+  /* Rines / Masas */
+  {id:'p100',brand:'Odyssey',cat:'rines',name:'Masa Trasera Odyssey Clutch V2 Freecoaster',desc:'Freecoaster sellado, 9t driver.',price:5200,tag:'Top',stock:true},
+  {id:'p101',brand:'Cult',cat:'rines',name:'Rin Cult Match V2 Trasero Cassette',desc:'Doble pared, masa cassette 9t.',price:2900,stock:true},
+  {id:'p102',brand:'Éclat',cat:'rines',name:'Rin Éclat Bondi Delantero',desc:'Doble pared, masa sellada.',price:1900,stock:true},
+  {id:'p103',brand:'Summit',cat:'rines',name:'Rin Summit Delantero 36H',desc:'Aluminio doble pared económico.',price:850,stock:true},
+
+  /* Frenos */
+  {id:'p110',brand:'Odyssey',cat:'frenos',name:'Freno Odyssey Evo 2.5 U-Brake',desc:'Kit completo con cable y palanca.',price:1290,stock:true},
+  {id:'p111',brand:'Éclat',cat:'frenos',name:'Freno Éclat Unit U-Brake',desc:'Zapatas incluidas, buen mordisco.',price:1100,stock:true},
+  {id:'p112',brand:'Demolition',cat:'frenos',name:'Detangler / Rotor Demolition Axes',desc:'Gyro para giros de manubrio.',price:790,stock:false},
+
+  /* Asiento / Poste */
+  {id:'p120',brand:'Cult',cat:'asiento',name:'Asiento Cult Dehart Pivotal',desc:'Combo mid, funda resistente.',price:520,stock:true},
+  {id:'p121',brand:'Sunday',cat:'asiento',name:'Asiento Sunday Soft Pivotal',desc:'Acolchado cómodo, base pivotal.',price:480,stock:true},
+  {id:'p122',brand:'Éclat',cat:'asiento',name:'Poste Éclat Torch Pivotal 200mm',desc:'Cromoly, ligero, largo cómodo.',price:390,stock:true},
+
+  /* Pegas */
+  {id:'p130',brand:'Cult',cat:'pegas',name:'Pegas Cult OS Nylon (par)',desc:'Nylon-fibra, 4.5", núcleo cromoly.',price:420,stock:true},
+  {id:'p131',brand:'Demolition',cat:'pegas',name:'Pegas Demolition Peg (par)',desc:'Nylon reforzado, ligeras y resistentes.',price:450,stock:true},
+  {id:'p132',brand:'Chepe',cat:'pegas',name:'Pegas Chepe Acero (par)',desc:'Acero cromado clásico, económicas.',price:280,tag:'Oferta',price_old:350,stock:true},
+
+  /* Accesorios */
+  {id:'p140',brand:'Sando',cat:'accesorios',name:'Tapón de Cuadro / Tornillo Estrella',desc:'Star nut + tapa para el cabezal.',price:120,stock:true},
+  {id:'p141',brand:'Odyssey',cat:'accesorios',name:'Cable de Freno Odyssey Slic-Kable',desc:'Baja fricción, para U-brake.',price:290,stock:true},
+  {id:'p142',brand:'Sando',cat:'accesorios',name:'Kit de Baleros / Headset Integrado',desc:'Baleros sellados para cabezal integrado.',price:390,stock:true}
 ];
 
 /* --- Estado --- */
 let cart=JSON.parse(localStorage.getItem(CART_KEY)||'{}');
-let activeCat='todos';
+let activeCat='todos', activeBrand='todas';
 const $=s=>document.querySelector(s);
 
 function saveCart(){localStorage.setItem(CART_KEY,JSON.stringify(cart));}
 function cartQty(){return Object.values(cart).reduce((a,b)=>a+b,0);}
 function cartTotal(){return Object.entries(cart).reduce((t,[id,q])=>{const p=PRODUCTS.find(x=>x.id===id);return t+(p?p.price*q:0);},0);}
 
-/* --- Render catálogo --- */
-function renderCats(){
-  $('#cats').innerHTML=CATS.map(c=>`<button class="${c.id===activeCat?'active':''}" data-cat="${c.id}">${c.label}</button>`).join('');
-  document.querySelectorAll('#cats button').forEach(b=>b.onclick=()=>{activeCat=b.dataset.cat;renderCats();renderGrid();});
+/* --- Filtros --- */
+function renderFilters(){
+  $('#brands').innerHTML=`<button class="${activeBrand==='todas'?'active':''}" data-b="todas">Todas</button>`+
+    BRANDS.map(b=>`<button class="${b===activeBrand?'active':''}" data-b="${b}">${b}</button>`).join('');
+  $('#cats').innerHTML=`<button class="${activeCat==='todos'?'active':''}" data-c="todos">Todas</button>`+
+    CATS.map(c=>`<button class="${c.id===activeCat?'active':''}" data-c="${c.id}">${c.label}</button>`).join('');
+  document.querySelectorAll('#brands button').forEach(b=>b.onclick=()=>{activeBrand=b.dataset.b;renderFilters();renderGrid();});
+  document.querySelectorAll('#cats button').forEach(b=>b.onclick=()=>{activeCat=b.dataset.c;renderFilters();renderGrid();});
 }
 function renderGrid(){
   const q=$('#search').value.trim().toLowerCase();
   const sort=$('#sort').value;
-  let list=PRODUCTS.filter(p=>(activeCat==='todos'||p.cat===activeCat)&&(!q||p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)));
+  let list=PRODUCTS.filter(p=>
+    (activeCat==='todos'||p.cat===activeCat)&&
+    (activeBrand==='todas'||p.brand===activeBrand)&&
+    (!q||p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)||p.brand.toLowerCase().includes(q))
+  );
   if(sort==='price-asc')list.sort((a,b)=>a.price-b.price);
   else if(sort==='price-desc')list.sort((a,b)=>b.price-a.price);
   else if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));
+  $('#count').textContent=`${list.length} producto${list.length===1?'':'s'}`;
   if(!list.length){$('#grid').innerHTML='<div class="empty">No encontramos productos con esos criterios.</div>';return;}
   $('#grid').innerHTML=list.map(p=>`
     <div class="prod">
       <div class="ph">
         ${ICONS[p.cat]||ICONS.accesorios}
         ${p.tag?`<span class="tag${p.stock?'':' out'}">${p.stock?p.tag:'Agotado'}</span>`:(p.stock?'':'<span class="tag out">Agotado</span>')}
+        <span class="brand">${p.brand}</span>
       </div>
       <div class="info">
-        <span class="cat">${(CATS.find(c=>c.id===p.cat)||{}).label||''}</span>
+        <span class="cat">${catLabel(p.cat)}</span>
         <span class="name">${p.name}</span>
         <span class="desc">${p.desc}</span>
         <span class="price">${money(p.price)}${p.price_old?`<small>${money(p.price_old)}</small>`:''}</span>
@@ -270,37 +366,29 @@ function renderGrid(){
 /* --- Carrito --- */
 function addToCart(id){
   cart[id]=(cart[id]||0)+1;saveCart();updateCartUI();
-  const p=PRODUCTS.find(x=>x.id===id);
-  showToast('✓ '+p.name+' agregado');
+  showToast('✓ '+PRODUCTS.find(x=>x.id===id).name+' agregado');
 }
-function setQty(id,d){
-  cart[id]=(cart[id]||0)+d;
-  if(cart[id]<=0)delete cart[id];
-  saveCart();updateCartUI();
-}
+function setQty(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];saveCart();updateCartUI();}
 function removeItem(id){delete cart[id];saveCart();updateCartUI();}
 
 function updateCartUI(){
   const qty=cartQty();
-  const cc=$('#cartCount');
-  cc.textContent=qty;cc.classList.toggle('hidden',qty===0);
+  const cc=$('#cartCount');cc.textContent=qty;cc.classList.toggle('hidden',qty===0);
   const ids=Object.keys(cart);
   if(!ids.length){
     $('#cartBody').innerHTML='<div class="cempty">Tu carrito está vacío.<br>Agrega productos del catálogo.</div>';
-    $('#cartFoot').innerHTML='';
-    return;
+    $('#cartFoot').innerHTML='';return;
   }
   $('#cartBody').innerHTML=ids.map(id=>{
     const p=PRODUCTS.find(x=>x.id===id);if(!p)return '';
     return `<div class="citem">
       <div class="cph">${ICONS[p.cat]||ICONS.accesorios}</div>
       <div class="cinfo">
+        <div class="cbrand">${p.brand}</div>
         <div class="cname">${p.name}</div>
         <div class="cprice">${money(p.price)} c/u · <b>${money(p.price*cart[id])}</b></div>
         <div class="qty">
-          <button data-dec="${id}">−</button>
-          <span>${cart[id]}</span>
-          <button data-inc="${id}">+</button>
+          <button data-dec="${id}">−</button><span>${cart[id]}</span><button data-inc="${id}">+</button>
           <button class="rm" data-rm="${id}">Quitar</button>
         </div>
       </div>
@@ -320,10 +408,8 @@ function updateCartUI(){
 function checkout(){
   const ids=Object.keys(cart);if(!ids.length)return;
   let msg='*Pedido — Black Machine Bike Shop*%0A%0A';
-  ids.forEach(id=>{
-    const p=PRODUCTS.find(x=>x.id===id);if(!p)return;
-    msg+=`• ${cart[id]}x ${p.name} — ${money(p.price*cart[id])}%0A`;
-  });
+  ids.forEach(id=>{const p=PRODUCTS.find(x=>x.id===id);if(!p)return;
+    msg+=`• ${cart[id]}x [${p.brand}] ${p.name} — ${money(p.price*cart[id])}%0A`;});
   msg+=`%0A*Total: ${money(cartTotal())}*%0A%0AHola, quiero hacer este pedido. ¿Me confirman disponibilidad y forma de pago?`;
   window.open(`https://wa.me/${CFG.whatsapp}?text=${msg}`,'_blank');
 }
@@ -331,22 +417,16 @@ function checkout(){
 /* --- Drawer --- */
 function openCart(){$('#drawer').classList.add('open');$('#overlay').classList.add('open');}
 function closeCart(){$('#drawer').classList.remove('open');$('#overlay').classList.remove('open');}
-$('#cartBtn').onclick=openCart;
-$('#closeCart').onclick=closeCart;
-$('#overlay').onclick=closeCart;
+$('#cartBtn').onclick=openCart;$('#closeCart').onclick=closeCart;$('#overlay').onclick=closeCart;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCart();});
 
 /* --- Toast --- */
 let toastT;
-function showToast(txt){
-  const t=$('#toast');t.textContent=txt;t.classList.add('show');
-  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800);
-}
+function showToast(txt){const t=$('#toast');t.textContent=txt;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800);}
 
 /* --- Init --- */
-$('#search').oninput=renderGrid;
-$('#sort').onchange=renderGrid;
-renderCats();renderGrid();updateCartUI();
+$('#search').oninput=renderGrid;$('#sort').onchange=renderGrid;
+renderFilters();renderGrid();updateCartUI();
 </script>
 </body>
 </html>
