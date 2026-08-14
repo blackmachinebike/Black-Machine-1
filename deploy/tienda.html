@@ -322,15 +322,24 @@ const $=s=>document.querySelector(s);
 
 /* --- Logo --- */
 function logoMark(ink,paper,size){
-  return `<svg viewBox="0 0 220 210" width="${size}" height="${size*210/220}" xmlns="http://www.w3.org/2000/svg" aria-label="Black Machine">
-    <g fill="${ink}"><circle cx="110" cy="16" r="13"/><rect x="106" y="16" width="8" height="40"/>
-    <rect x="74" y="34" width="20" height="24" rx="3"/><rect x="126" y="34" width="20" height="24" rx="3"/>
-    <rect x="20" y="92" width="24" height="58" rx="12"/><rect x="176" y="92" width="24" height="58" rx="12"/>
-    <rect x="38" y="52" width="144" height="140" rx="32"/></g>
-    <rect x="66" y="76" width="88" height="94" rx="18" fill="${paper}"/>
-    <g fill="${ink}"><circle cx="92" cy="123" r="24"/><circle cx="128" cy="123" r="24"/><rect x="92" y="105" width="36" height="36" rx="18"/></g>
-    <circle cx="92" cy="123" r="12.5" fill="${paper}"/><circle cx="128" cy="123" r="12.5" fill="${paper}"/>
-    <g fill="${ink}"><circle cx="92" cy="123" r="5.5"/><circle cx="128" cy="123" r="5.5"/></g></svg>`;
+  return `<svg viewBox="0 0 220 220" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" aria-label="Black Machine">
+    <g fill="${ink}">
+      <!-- antena -->
+      <circle cx="110" cy="20" r="13"/><rect x="104" y="20" width="12" height="30"/>
+      <!-- tabs superiores -->
+      <rect x="72" y="44" width="24" height="28" rx="5"/><rect x="124" y="44" width="24" height="28" rx="5"/>
+      <!-- orejas -->
+      <rect x="24" y="116" width="22" height="54" rx="11"/><rect x="174" y="116" width="22" height="54" rx="11"/>
+    </g>
+    <!-- cabeza (contorno) -->
+    <rect x="49" y="63" width="122" height="130" rx="28" fill="${paper}" stroke="${ink}" stroke-width="15"/>
+    <!-- eslabon de cadena: dos rodillos unidos por placa con cintura -->
+    <g fill="${ink}">
+      <rect x="84" y="122" width="52" height="36" rx="6"/>
+      <circle cx="84" cy="140" r="30"/><circle cx="136" cy="140" r="30"/>
+    </g>
+    <circle cx="84" cy="140" r="14" fill="${paper}"/><circle cx="136" cy="140" r="14" fill="${paper}"/>
+    <g fill="${ink}"><circle cx="84" cy="140" r="6"/><circle cx="136" cy="140" r="6"/></g></svg>`;
 }
 $('#brandLogo').innerHTML=logoMark('#f2f2f2','#000',42);
 $('#waFoot').href='https://wa.me/'+CFG.whatsapp;
