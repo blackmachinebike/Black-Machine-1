@@ -105,16 +105,18 @@
   .teaser-head .more:hover{text-decoration:underline}
   /* Eventos */
   .ev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-  .ev{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
-  .ev:hover{border-color:var(--accent);transform:translateY(-2px)}
-  .ev .cover{height:120px;background:linear-gradient(120deg,#1c2029,#0d1014);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
-  .ev .cover .disc{font-size:34px;font-weight:900;letter-spacing:2px;color:rgba(255,255,255,.06);text-transform:uppercase}
-  .ev .cover svg{position:absolute;width:56px;height:56px;opacity:.9}
-  .ev .kind{position:absolute;top:10px;left:10px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:3px 9px;border-radius:20px}
-  .ev .kind.cobertura{background:rgba(225,29,42,.9);color:#fff}
+  .ev{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
+  .ev:hover{border-color:var(--accent);transform:translateY(-3px)}
+  .ev .cover{height:148px;background:radial-gradient(120% 140% at 75% 10%,#20242e,#0d1014);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .ev .cover::after{content:"";position:absolute;top:-20%;left:52%;width:60%;height:150%;transform:skewX(-14deg);background:linear-gradient(90deg,transparent,rgba(225,29,42,.14));border-left:2px solid rgba(225,29,42,.5)}
+  .ev .cover .disc{font-size:44px;font-weight:900;letter-spacing:-1px;color:rgba(255,255,255,.06);text-transform:uppercase}
+  .ev .cover svg{position:absolute;width:60px;height:60px;opacity:.9}
+  .ev .kind{position:absolute;top:12px;left:12px;z-index:2;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 10px;border-radius:4px;font-family:var(--mono)}
+  .ev .kind.cobertura{background:var(--accent);color:#fff}
   .ev .kind.proximo{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.4)}
   .ev .kind.patrocinio{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.4)}
   .ev .body{padding:15px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .ev .title{text-transform:uppercase;letter-spacing:-.3px}
   .ev .meta{font-size:11.5px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;font-family:var(--mono);letter-spacing:.2px}
   .ev .meta b{color:var(--chrome);font-weight:700}
   .ev .title{font-weight:800;font-size:16px;line-height:1.25}
@@ -122,19 +124,19 @@
   .ev .disc-tag{align-self:flex-start;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);border:1px solid var(--line);padding:3px 9px;border-radius:6px}
   /* Atletas */
   .at-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
-  .at{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:border-color .15s,transform .15s}
-  .at:hover{border-color:var(--accent);transform:translateY(-2px)}
-  .at .ph{height:200px;background:radial-gradient(circle at 50% 35%,#242833,#101319);display:flex;align-items:center;justify-content:center;position:relative}
-  .at .ph .ini{font-size:52px;font-weight:900;color:rgba(255,255,255,.10)}
-  .at .ph svg{position:absolute;bottom:14px;right:14px;width:30px;height:30px;opacity:.85}
-  .at .disc-tag{position:absolute;top:12px;left:12px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#fff;background:rgba(225,29,42,.9);padding:3px 10px;border-radius:20px}
-  .at .info{padding:15px}
-  .at .name{font-weight:800;font-size:17px}
-  .at .loc{font-size:12px;color:var(--muted);margin:2px 0 8px}
-  .at .bio{font-size:13px;color:var(--muted);line-height:1.45}
-  .at .logros{margin-top:10px;font-size:12px;color:var(--txt);border-top:1px solid var(--line);padding-top:10px}
-  .at .logros b{color:var(--accent)}
-  .at .ig{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--accent)}
+  .at{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:border-color .15s,transform .15s}
+  .at:hover{border-color:var(--accent);transform:translateY(-3px)}
+  .at-ph{position:relative;aspect-ratio:3/4;background:radial-gradient(circle at 50% 34%,#242833,#101319);overflow:hidden}
+  .at-ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:900;color:rgba(255,255,255,.09)}
+  .at-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s}
+  .at:hover .at-img{transform:scale(1.04)}
+  .at-disc{position:absolute;top:12px;left:12px;z-index:2;font-family:var(--mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;background:var(--accent);padding:4px 10px;border-radius:4px}
+  .at-grad{position:absolute;inset:0;z-index:1;background:linear-gradient(to top,rgba(10,12,15,.96) 4%,rgba(10,12,15,.35) 42%,transparent 66%)}
+  .at-name{position:absolute;left:14px;right:14px;bottom:12px;z-index:2;font-size:21px;font-weight:800;text-transform:uppercase;letter-spacing:-.5px;line-height:1}
+  .at-name em{display:block;font-style:normal;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1px;color:var(--chrome);text-transform:uppercase;margin-top:5px}
+  .at-info{padding:14px}
+  .at-bio{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
+  .at-ig{display:inline-block;margin-top:11px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent)}
   /* Tienda */
   .filter-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin:16px 0 8px;font-family:var(--mono)}
   .count{font-family:var(--mono);letter-spacing:.5px}
@@ -147,13 +149,15 @@
   .toolbar input{flex:1;min-width:180px}
   .count{color:var(--muted);font-size:13px;margin:10px 0 16px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
-  .prod{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
-  .prod:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .prod{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s;position:relative}
+  .prod::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .2s;z-index:3}
+  .prod:hover{border-color:var(--accent);transform:translateY(-3px)}
+  .prod:hover::before{transform:scaleX(1)}
   .prod .ph{aspect-ratio:1/1;background:radial-gradient(circle at 50% 40%,#232733,#12151b);display:flex;align-items:center;justify-content:center;position:relative}
   .prod .ph svg{width:70px;height:70px;opacity:.85}
-  .prod .tag{position:absolute;top:10px;left:10px;background:var(--accent);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px}
+  .prod .tag{position:absolute;top:10px;left:10px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:4px 9px;border-radius:4px;text-transform:uppercase;letter-spacing:.6px}
   .prod .tag.out{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
-  .prod .brand{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:.6px}
+  .prod .brand{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:700;padding:4px 9px;border-radius:4px;text-transform:uppercase;letter-spacing:.8px}
   .prod .info{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
   .prod .cat{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-family:var(--mono)}
   .prod .name{font-weight:700;font-size:15px;line-height:1.25}
@@ -425,12 +429,14 @@ const kindLabel={cobertura:'Cobertura',patrocinio:'Patrocinio',proximo:'Próximo
 
 /* --- ATLETAS (ejemplo — reemplaza con los reales) --- */
 const ATHLETES=[
-  {id:'a1',name:'Rider Ejemplo 1',disc:'BMX Street',loc:'Zapopan, Jal.',bio:'Enfocado en street y ledges. Estilo agresivo y limpio, referente de la escena local.',logros:'2× podio Copa Jalisco',ig:'@rider1'},
-  {id:'a2',name:'Rider Ejemplo 2',disc:'BMX Park',loc:'Guadalajara, Jal.',bio:'Especialista en park y transferencias grandes. Constante en contests nacionales.',logros:'Top 5 Nacional Park 2024',ig:'@rider2'},
-  {id:'a3',name:'Rider Ejemplo 3',disc:'BMX Racing',loc:'Tlaquepaque, Jal.',bio:'Velocidad pura en pista. Categoría experta, disciplina de entrenamiento diaria.',logros:'Campeón Estatal Racing',ig:'@rider3'},
-  {id:'a4',name:'Rider Ejemplo 4',disc:'MTB Enduro',loc:'Zapopan, Jal.',bio:'Rueda los senderos de La Primavera. Técnica en bajada y resistencia.',logros:'Podio Enduro Series',ig:'@rider4'},
-  {id:'a5',name:'Rider Ejemplo 5',disc:'Ruta',loc:'Chapala, Jal.',bio:'Fondista de carretera. Escalador constante en gran fondo regional.',logros:'Top 10 Gran Fondo',ig:'@rider5'},
-  {id:'a6',name:'Rider Ejemplo 6',disc:'Urbano',loc:'Guadalajara, Jal.',bio:'Cara visible de la rodada urbana. Impulsa a nuevos ciclistas en la ciudad.',logros:'Líder de comunidad',ig:'@rider6'}
+  {id:'a1',name:'Sofía Baez',disc:'BMX Freestyle',loc:'México',ig:'sofibaezbmx',
+   bio:'Rider mexicana de BMX freestyle. Cuenta con el apoyo del Comité Olímpico Mexicano, la CONADE e Indereq, y entrena con Dante Tabuyo.'},
+  {id:'a2',name:'Valentina Bernal',disc:'BMX Freestyle',loc:'',ig:'_valentinabernalrio',
+   bio:'Rider de BMX del equipo Black Machine. (Perfil pendiente de completar.)'},
+  {id:'a3',name:'Juan Miranda',disc:'BMX Freestyle',loc:'',ig:'juanmiranda_bmx',
+   bio:'Rider de BMX del equipo Black Machine. (Perfil pendiente de completar.)'},
+  {id:'a4',name:'Dante Tabuyo',disc:'BMX Freestyle',loc:'México',ig:'dantetabuyo',
+   bio:'Rider mexicano del equipo Free Agent. Campeón nacional amateur de la serie USA BMX Freestyle (2021).'}
 ];
 
 /* --- PRODUCTOS (precios de mercado MXN — ajústalos a tu inventario) --- */
@@ -533,16 +539,20 @@ function renderEvents(){
 /* ================= ATLETAS ================= */
 function atCard(a){
   const ini=a.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  return `<div class="at">
-    <div class="ph"><span class="ini">${ini}</span><span class="disc-tag">${a.disc}</span>${RIDER}</div>
-    <div class="info">
-      <div class="name">${a.name}</div>
-      <div class="loc">${a.loc}</div>
-      <div class="bio">${a.bio}</div>
-      <div class="logros">${TROPHY.replace('width="1.5"','width="1.5"')} <b>Logro:</b> ${a.logros}</div>
-      <a class="ig" href="#" onclick="return false">${a.ig}</a>
+  const url='https://www.instagram.com/'+a.ig+'/';
+  return `<a class="at" href="${url}" target="_blank" rel="noopener">
+    <div class="at-ph">
+      <span class="at-ini">${ini}</span>
+      <img class="at-img" src="assets/atletas/${a.ig}.jpg" alt="${a.name}" loading="lazy" onerror="this.remove()">
+      <span class="at-disc">${a.disc}</span>
+      <span class="at-grad"></span>
+      <span class="at-name">${a.name}${a.loc?`<em>${a.loc}</em>`:''}</span>
     </div>
-  </div>`;
+    <div class="at-info">
+      <p class="at-bio">${a.bio}</p>
+      <span class="at-ig">@${a.ig} ↗</span>
+    </div>
+  </a>`;
 }
 function renderAthletes(){
   $('#atGrid').innerHTML=ATHLETES.map(atCard).join('');
