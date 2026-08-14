@@ -20,9 +20,25 @@ instalación ni servidor. Los datos se guardan localmente en el navegador
 - **Exportar CSV:** descarga todas las notas en un archivo compatible con Excel.
 - **Folios automáticos:** V0001 (venta), A0001 (apartado), T0001 (taller).
 
-## Tienda en línea (e-commerce)
+## Sitio público / e-commerce
 
-- **`tienda.html`** — catálogo público de la tienda **BMX**. Productos separados
+- **`tienda.html`** — **sitio completo de Black Machine** (una sola página, sin
+  servidor). Navegación entre 4 secciones:
+  - **Inicio:** hero con la voz de marca, los 5 pilares, la frase insignia y
+    adelantos de eventos, atletas y productos destacados.
+  - **Eventos:** los eventos que la marca cubre / patrocina, con fecha, lugar,
+    disciplina y etiqueta (Cobertura / Patrocinio / Próximo). Edita el arreglo
+    `EVENTS` (id, title, disc, date, loc, kind, desc).
+  - **Atletas:** los riders patrocinados, con disciplina, ubicación, bio, logro
+    y su Instagram. Edita el arreglo `ATHLETES` (id, name, disc, loc, bio,
+    logros, ig).
+  - **Tienda:** el catálogo con doble filtro y carrito (ver abajo).
+
+  Los eventos y atletas están **precargados con ejemplos**; reemplázalos con los
+  reales. Para poner fotos reales de atleta/evento, sustituye el bloque `.ph` /
+  `.cover` por una `<img>`.
+
+  El catálogo BMX: productos separados
   por **marca** (Cult, Demolition, Sunday, Kink, Summit, Odyssey, Éclat, Sando,
   Chepe) y por **categoría de producto** (bicis completas, cuadros, tijeras,
   manubrios, potencias, puños, pedales, bielas, sprocket/cadena, llantas,
