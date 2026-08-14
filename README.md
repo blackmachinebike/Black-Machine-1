@@ -20,6 +20,17 @@ instalación ni servidor. Los datos se guardan localmente en el navegador
 - **Exportar CSV:** descarga todas las notas en un archivo compatible con Excel.
 - **Folios automáticos:** V0001 (venta), A0001 (apartado), T0001 (taller).
 
+## Tienda en línea (e-commerce)
+
+- **`tienda.html`** — catálogo público de la tienda. Muestra bicicletas, cascos,
+  accesorios, refacciones y ropa organizados por categoría, con buscador,
+  ordenamiento y carrito de compra. El pedido se envía por **WhatsApp**
+  (`33 2589 9142`) con el detalle y total; ahí se confirma disponibilidad,
+  envío/recolección y forma de pago. El carrito se guarda en `localStorage`,
+  no requiere servidor ni pasarela de pago. Para editar el catálogo cambia el
+  arreglo `PRODUCTS` dentro del archivo (id, categoría, nombre, descripción,
+  precio, `price_old` para ofertas, `tag` y `stock`).
+
 ## Versiones
 
 - **`index.html`** — versión local. Los datos se guardan solo en el navegador de
