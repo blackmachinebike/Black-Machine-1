@@ -144,10 +144,11 @@
   <!-- DASHBOARD -->
   <div id="view-dashboard">
     <div class="cards">
-      <div class="card"><div class="k">Total notas</div><div class="v" id="stTotal">0</div></div>
-      <div class="card"><div class="k">Ventas</div><div class="v" id="stVentas">$0</div></div>
+      <div class="card"><div class="k">Ventas del mes</div><div class="v" id="stVentasMes">$0</div><div class="k" id="stMesNombre" style="margin-top:4px"></div></div>
+      <div class="card"><div class="k">Ventas totales</div><div class="v" id="stVentas">$0</div></div>
       <div class="card"><div class="k">Apartados (saldo)</div><div class="v" id="stApartados">$0</div></div>
       <div class="card"><div class="k">Taller pendiente</div><div class="v" id="stTaller">0</div></div>
+      <div class="card"><div class="k">Total notas</div><div class="v" id="stTotal">0</div></div>
     </div>
     <div class="panel">
       <h2>Últimas notas</h2>
@@ -545,6 +546,11 @@ function folio(tipo){
 function renderDashboard(){
   document.getElementById('stTotal').textContent=notas.length;
   const ventas=notas.filter(n=>n.tipo==='venta').reduce((s,n)=>s+n.total,0);
+  const ahora=new Date();
+  const mesActual=ahora.getFullYear()+'-'+String(ahora.getMonth()+1).padStart(2,'0');
+  const ventasMes=notas.filter(n=>n.tipo==='venta'&&(n.fecha||'').slice(0,7)===mesActual).reduce((s,n)=>s+n.total,0);
+  document.getElementById('stVentasMes').textContent=money(ventasMes);
+  document.getElementById('stMesNombre').textContent=ahora.toLocaleDateString('es-MX',{month:'long',year:'numeric'}).toUpperCase();
   const saldoAp=notas.filter(n=>n.tipo==='apartado').reduce((s,n)=>s+n.saldo,0);
   const tallerP=notas.filter(n=>n.tipo==='taller'&&n.estado==='proceso').length;
   document.getElementById('stVentas').textContent=money(ventas);
