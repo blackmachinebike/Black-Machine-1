@@ -30,6 +30,8 @@
   label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
   input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:9px 10px;border-radius:7px;font-size:14px;font-family:inherit}
   textarea{resize:vertical;min-height:60px}
+  .up{text-transform:uppercase}
+  input.up::placeholder,textarea.up::placeholder{text-transform:none}
   .items-table{width:100%;border-collapse:collapse;margin-top:8px}
   .items-table th,.items-table td{border:1px solid var(--line);padding:6px;font-size:13px;text-align:left}
   .items-table th{background:var(--panel2);color:var(--muted)}
@@ -136,6 +138,7 @@
     <button data-view="dashboard" class="active">Panel</button>
     <button data-view="nueva">Nueva nota</button>
     <button data-view="lista">Notas registradas</button>
+    <button data-view="clientes">Clientes</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -166,9 +169,9 @@
           </select>
         </div>
         <div><label>Fecha</label><input type="date" id="fFecha"></div>
-        <div><label>Cliente</label><input id="fCliente" placeholder="Nombre del cliente"></div>
-        <div><label>Teléfono</label><input id="fTel" placeholder="Opcional"></div>
+        <div><label>Cliente</label><input id="fCliente" class="up" list="clienteList" placeholder="Nombre del cliente"><datalist id="clienteList"></datalist></div>
         <div><label>WhatsApp del cliente</label><input id="fWa" placeholder="Opcional"></div>
+        <div><label>Domicilio del cliente</label><input id="fDomicilio" class="up" placeholder="Opcional"></div>
         <div><label>Método de pago</label>
           <select id="fPago"></select>
         </div>
@@ -176,14 +179,16 @@
 
       <!-- Campos específicos taller -->
       <div id="grpTaller" class="grid hidden" style="margin-top:12px">
-        <div><label>Bicicleta / Modelo</label><input id="fBici" placeholder="Marca y modelo"></div>
+        <div><label>Bicicleta / Modelo</label><input id="fBici" class="up" placeholder="Marca y modelo"></div>
+        <div><label>Rodado</label><input id="fRodado" class="up" placeholder="Ej. 20, 24, 26, 27.5, 29"></div>
         <div><label>Estado</label>
           <select id="fEstado">
             <option value="proceso">En proceso</option>
             <option value="entregado">Entregado</option>
           </select>
         </div>
-        <div style="grid-column:1/-1"><label>Diagnóstico / Trabajo a realizar</label><textarea id="fDiag" placeholder="Descripción del servicio"></textarea></div>
+        <div style="grid-column:1/-1"><label>Detalles / Estado físico (¿trae rayones, golpes, accesorios?)</label><textarea id="fDetalles" class="up" placeholder="Describe si la bicicleta trae detalles al recibirla"></textarea></div>
+        <div style="grid-column:1/-1"><label>Diagnóstico / Trabajo a realizar</label><textarea id="fDiag" class="up" placeholder="Descripción del servicio"></textarea></div>
       </div>
 
       <h2 style="margin-top:18px">Conceptos</h2>
@@ -201,13 +206,21 @@
       <div class="total-line">Total: <span id="totalPreview">$0.00</span></div>
       <div id="saldoLine" class="total-line hidden">Saldo pendiente: <span id="saldoPreview">$0.00</span></div>
 
-      <div style="margin-top:12px"><label>Notas / Observaciones</label><textarea id="fObs"></textarea></div>
+      <div style="margin-top:12px"><label>Notas / Observaciones</label><textarea id="fObs" class="up"></textarea></div>
 
       <div class="row">
         <button class="btn" id="guardar">Guardar nota</button>
         <button class="btn sec" id="limpiar">Limpiar</button>
       </div>
     </div>
+  </div>
+
+  <!-- CLIENTES -->
+  <div id="view-clientes" class="hidden">
+    <div class="toolbar">
+      <input id="buscarCli" placeholder="Buscar cliente por nombre o WhatsApp...">
+    </div>
+    <div class="note-list" id="listaClientes"></div>
   </div>
 
   <!-- LISTA -->
@@ -262,6 +275,15 @@ const TIENDA=Object.assign({
 function saveConfig(){localStorage.setItem(CKEY,JSON.stringify({tel:TIENDA.tel,whatsapp:TIENDA.whatsapp}));}
 const waLink=num=>num?('https://wa.me/'+num.replace(/[^0-9]/g,'')):'';
 const PAGOS=['Efectivo','Tarjeta','Transferencia','Depósito','Mixto'];
+const digits=s=>(s||'').replace(/\D/g,'');
+// Mayúsculas automáticas en los campos marcados con clase "up"
+document.addEventListener('input',e=>{
+  if(e.target.classList&&e.target.classList.contains('up')){
+    const p=e.target.selectionStart;
+    e.target.value=e.target.value.toUpperCase();
+    try{e.target.setSelectionRange(p,p);}catch(_){}
+  }
+});
 // --- Diálogos propios (funcionan dentro del visor web, sin prompt/alert/confirm) ---
 function toast(msg){
   let t=document.getElementById('toast');
@@ -341,6 +363,7 @@ document.getElementById('btnConfig').onclick=async()=>{
 const money=n=>'$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let notas=[];
+let clientes=[];
 
 // Reintenta operaciones de red ante fallos temporales de conexión
 async function withRetry(fn,tries=3){
@@ -374,6 +397,19 @@ const DB={
     if(error)throw error;
     notas=notas.filter(x=>x.id!==id);
   },
+  async clientesAll(){
+    if(!CLOUD)return JSON.parse(localStorage.getItem('bm_clientes_v1')||'[]');
+    const {data,error}=await sb.from('clientes').select('*').order('nombre');
+    if(error)return clientes;
+    return data;
+  },
+  async clienteUpsert(c){
+    if(!CLOUD){
+      const arr=JSON.parse(localStorage.getItem('bm_clientes_v1')||'[]').filter(x=>x.id!==c.id);
+      arr.push(c);localStorage.setItem('bm_clientes_v1',JSON.stringify(arr));return;
+    }
+    await withRetry(async()=>{const {error}=await sb.from('clientes').upsert(c);if(error)throw error;});
+  },
   async loadConfig(){
     if(!CLOUD)return;
     const {data}=await sb.from('config').select('*').eq('id',1).maybeSingle();
@@ -389,9 +425,10 @@ const DB={
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
-  ['dashboard','nueva','lista'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==b.dataset.view));
+  ['dashboard','nueva','lista','clientes'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==b.dataset.view));
   if(b.dataset.view==='dashboard')renderDashboard();
   if(b.dataset.view==='lista')renderLista();
+  if(b.dataset.view==='clientes')renderClientes();
 });
 
 // ---- Formulario ----
@@ -402,7 +439,7 @@ document.getElementById('fPago').innerHTML=PAGOS.map(p=>`<option>${p}</option>`)
 
 function addItemRow(desc='',cant=1,precio=''){
   const tr=document.createElement('tr');
-  tr.innerHTML=`<td><input class="i-desc" value="${desc}"></td>
+  tr.innerHTML=`<td><input class="i-desc up" value="${desc}"></td>
     <td><input class="i-cant" type="number" min="0" step="1" value="${cant}" style="width:70px"></td>
     <td><input class="i-precio" type="number" min="0" step="0.01" value="${precio}" style="width:100px"></td>
     <td class="i-importe">$0.00</td>
@@ -438,10 +475,12 @@ fTipo.onchange=()=>{
 
 function limpiar(){
   document.getElementById('fCliente').value='';
-  document.getElementById('fTel').value='';
   document.getElementById('fWa').value='';
+  document.getElementById('fDomicilio').value='';
   document.getElementById('fPago').selectedIndex=0;
   document.getElementById('fBici').value='';
+  document.getElementById('fRodado').value='';
+  document.getElementById('fDetalles').value='';
   document.getElementById('fDiag').value='';
   document.getElementById('fObs').value='';
   document.getElementById('fAnticipo').value=0;
@@ -467,10 +506,12 @@ document.getElementById('guardar').onclick=async()=>{
     tipo,
     fecha:document.getElementById('fFecha').value,
     cliente:document.getElementById('fCliente').value.trim(),
-    tel:document.getElementById('fTel').value.trim(),
     wa:document.getElementById('fWa').value.trim(),
+    domicilio:document.getElementById('fDomicilio').value.trim(),
     pago:document.getElementById('fPago').value,
     bici:document.getElementById('fBici').value.trim(),
+    rodado:document.getElementById('fRodado').value.trim(),
+    detalles:document.getElementById('fDetalles').value.trim(),
     diag:document.getElementById('fDiag').value.trim(),
     estado:document.getElementById('fEstado').value,
     items,total,anticipo,
@@ -481,6 +522,12 @@ document.getElementById('guardar').onclick=async()=>{
   const btn=document.getElementById('guardar');btn.disabled=true;
   try{
     await DB.insert(nota);
+    // Guardar/actualizar historial del cliente (si tiene WhatsApp)
+    if(nota.wa&&digits(nota.wa)){
+      const c={id:digits(nota.wa),nombre:nota.cliente,whatsapp:nota.wa,domicilio:nota.domicilio,creada:new Date().toISOString()};
+      try{await DB.clienteUpsert(c);clientes=clientes.filter(x=>x.id!==c.id);clientes.push(c);}catch(_){}
+      refreshClienteList();
+    }
     toast('Nota '+nota.folio+' guardada.');
     limpiar();
     document.querySelector('.tabs button[data-view="lista"]').click();
@@ -524,6 +571,50 @@ function renderLista(){
 document.getElementById('buscar').oninput=renderLista;
 document.getElementById('filtroTipo').onchange=renderLista;
 
+// ---- Clientes (historial) ----
+function refreshClienteList(){
+  const dl=document.getElementById('clienteList');
+  if(dl)dl.innerHTML=clientes.map(c=>`<option value="${(c.nombre||'').replace(/"/g,'')}">`).join('');
+}
+function renderClientes(){
+  const q=document.getElementById('buscarCli').value.toLowerCase();
+  const el=document.getElementById('listaClientes');
+  const list=clientes.filter(c=>((c.nombre||'')+' '+(c.whatsapp||'')).toLowerCase().includes(q))
+    .sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+  el.innerHTML=list.map(c=>{
+    const nn=notas.filter(n=>digits(n.wa)===c.id).length;
+    return `<div class="note" data-cli="${(c.nombre||'').replace(/"/g,'&quot;')}">
+      <div>
+        <div><strong>${c.nombre||'—'}</strong></div>
+        <div class="meta">${c.whatsapp?'WhatsApp: '+c.whatsapp:''}${c.domicilio?' · '+c.domicilio:''}</div>
+        <div class="meta">${nn} nota(s)</div>
+      </div>
+      <div class="amt" style="font-size:14px">Ver historial ›</div>
+    </div>`;
+  }).join('')||'<div class="empty">Aún no hay clientes guardados. Se agregan solos al registrar notas con WhatsApp.</div>';
+  el.querySelectorAll('.note').forEach(x=>x.onclick=()=>{
+    document.querySelector('.tabs button[data-view="lista"]').click();
+    document.getElementById('buscar').value=x.dataset.cli;
+    renderLista();
+  });
+}
+document.getElementById('buscarCli').oninput=renderClientes;
+
+// Autocompletar datos del cliente al elegir uno existente
+function autofillCliente(){
+  const nombre=document.getElementById('fCliente').value.trim().toUpperCase();
+  const wa=digits(document.getElementById('fWa').value);
+  let c=null;
+  if(wa)c=clientes.find(x=>x.id===wa);
+  if(!c&&nombre)c=clientes.find(x=>(x.nombre||'').toUpperCase()===nombre);
+  if(!c)return;
+  if(!document.getElementById('fWa').value.trim()&&c.whatsapp)document.getElementById('fWa').value=c.whatsapp;
+  if(!document.getElementById('fDomicilio').value.trim()&&c.domicilio)document.getElementById('fDomicilio').value=c.domicilio;
+  if(c.nombre)document.getElementById('fCliente').value=c.nombre;
+}
+document.getElementById('fCliente').addEventListener('change',autofillCliente);
+document.getElementById('fWa').addEventListener('change',autofillCliente);
+
 function noteHTML(n){
   const estado=n.tipo==='apartado'?(n.saldo<=0?'pagado':'pendiente'):(n.tipo==='taller'?n.estado:'');
   const estBadge=estado?`<span class="badge ${estado}">${estado==='proceso'?'en proceso':estado}</span>`:'';
@@ -546,10 +637,11 @@ const tipoLabel={venta:'Nota de venta',apartado:'Nota de apartado',taller:'Nota 
 function abrirDetalle(id){
   const n=notas.find(x=>x.id===id);if(!n)return;
   const rows=n.items.map(i=>`<tr><td>${i.desc}</td><td class="num">${i.cant}</td><td class="num">${money(i.precio)}</td><td class="num">${money(i.cant*i.precio)}</td></tr>`).join('');
-  const contactoCli=[n.tel?'Tel: '+n.tel:'',n.wa?'WhatsApp: '+n.wa:''].filter(Boolean).join('<br>');
+  const contactoCli=[n.wa?'WhatsApp: '+n.wa:'',n.domicilio?'Dom: '+n.domicilio:''].filter(Boolean).join('<br>');
+  const biciTxt=[n.bici,n.rodado?'R'+n.rodado:''].filter(Boolean).join(' · ');
   const infoBlocks=`
     <div><b>Cliente</b>${n.cliente||'—'}${contactoCli?'<br>'+contactoCli:''}</div>
-    ${n.bici?`<div><b>Bicicleta</b>${n.bici}</div>`:''}
+    ${biciTxt?`<div><b>Bicicleta</b>${biciTxt}</div>`:''}
     <div style="text-align:right"><b>Fecha</b>${n.fecha}${n.pago?'<br><b>Pago</b>'+n.pago:''}</div>`;
   const totales=`
     <div class="r-totals">
@@ -574,6 +666,7 @@ function abrirDetalle(id){
       </div>
     </div>
     <div class="r-info">${infoBlocks}</div>
+    ${n.detalles?`<div style="font-size:12px;margin-bottom:8px"><b style="color:#666;font-size:10px;text-transform:uppercase">Detalles al recibir</b><br>${n.detalles}</div>`:''}
     ${n.diag?`<div style="font-size:12px;margin-bottom:8px"><b style="color:#666;font-size:10px;text-transform:uppercase">Servicio</b><br>${n.diag}${n.tipo==='taller'?' · Estado: '+(n.estado==='proceso'?'En proceso':'Entregado'):''}</div>`:''}
     <table class="r-items"><thead><tr><th>Descripción</th><th class="num">Cant.</th><th class="num">P. Unitario</th><th class="num">Importe</th></tr></thead><tbody>${rows}</tbody></table>
     ${totales}
@@ -650,8 +743,8 @@ function refresh(){renderDashboard();renderLista();}
 
 // ---- Exportar CSV ----
 document.getElementById('exportar').onclick=()=>{
-  const head=['Folio','Tipo','Fecha','Cliente','Telefono','WhatsApp','MetodoPago','Bicicleta','Total','Anticipo','Saldo','Estado','Conceptos'];
-  const rows=notas.map(n=>[n.folio,n.tipo,n.fecha,n.cliente,n.tel,n.wa||'',n.pago||'',n.bici,n.total,n.anticipo,n.saldo,n.estado,
+  const head=['Folio','Tipo','Fecha','Cliente','WhatsApp','Domicilio','MetodoPago','Bicicleta','Rodado','Detalles','Total','Anticipo','Saldo','Estado','Conceptos'];
+  const rows=notas.map(n=>[n.folio,n.tipo,n.fecha,n.cliente,n.wa||'',n.domicilio||'',n.pago||'',n.bici||'',n.rodado||'',n.detalles||'',n.total,n.anticipo,n.saldo,n.estado,
     n.items.map(i=>`${i.cant}x ${i.desc} (${i.precio})`).join(' | ')]
     .map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(','));
   const csv=[head.join(','),...rows].join('\n');
@@ -667,10 +760,13 @@ async function startApp(){
   await DB.loadConfig();
   renderHeader();
   notas=await DB.all();
+  clientes=await DB.clientesAll();
+  refreshClienteList();
   refresh();
   if(CLOUD){
     sb.channel('notas-rt')
       .on('postgres_changes',{event:'*',schema:'public',table:'notas'},async()=>{notas=await DB.all();refresh();})
+      .on('postgres_changes',{event:'*',schema:'public',table:'clientes'},async()=>{clientes=await DB.clientesAll();refreshClienteList();})
       .subscribe();
   }
 }
