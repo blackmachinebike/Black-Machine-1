@@ -333,7 +333,7 @@ const CFG={
   whatsapp:'523325899142',
   // Pega aquí la URL CSV de tu Google Sheet publicado (Archivo → Compartir → Publicar en la web → CSV).
   // Mientras esté vacío, la tienda usa el catálogo de respaldo de abajo.
-  sheetCsvUrl:''
+  sheetCsvUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vSbNXY1D68DqotcQyeJnB6eiRVVnF2KpP_AdGunVfk1nbo2KVyBZRxF3Rd4tB7jLNXtUqerDfeRVheD/pub?output=csv'
 };
 const CART_KEY='bm_tienda_cart_v2';
 const money=n=>'$'+n.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0});
@@ -661,7 +661,7 @@ function parseCSV(text){
   if(cur!==''||row.length){row.push(cur);rows.push(row);}
   return rows.filter(r=>r.some(x=>x.trim()!==''));
 }
-const norm=s=>(s||'').toString().trim().toLowerCase()
+const norm=s=>(s||'').toString().replace(/﻿/g,'').trim().toLowerCase()
   .normalize('NFD').replace(/[̀-ͯ]/g,'');
 function rowsToProducts(rows){
   if(!rows.length)return[];
@@ -701,7 +701,7 @@ async function loadCatalog(){
   try{
     const res=await fetch(CFG.sheetCsvUrl,{cache:'no-store'});
     if(!res.ok)throw new Error(res.status);
-    const prods=rowsToProducts(parseCSV(await res.text()));
+    const prods=rowsToProducts(parseCSV((await res.text()).replace(/^﻿/,'')));
     if(prods.length){ PRODUCTS=prods; rebuildFacets(); renderFilters(); renderGrid(); renderProdTeaser(); }
   }catch(e){ console.warn('No se pudo cargar el catálogo desde Google Sheets:',e); }
 }
