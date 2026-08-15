@@ -58,9 +58,21 @@ La tarjeta la toma sola. Si no existe, muestra el ícono de la categoría. Forma
 recomendado: cuadrada (1:1), mínimo 600×600 px. (Alternativa: pon la URL de la
 imagen en la columna `foto`.)
 
+## Eventos (misma idea, otra hoja)
+
+Los eventos también se administran desde Google Sheets. Usa una **hoja aparte**
+(otro documento) e importa `plantilla-eventos.csv`. Publícala en CSV igual que el
+catálogo y pega su URL en `CFG.eventsCsvUrl` dentro de `tienda.html`.
+
+Columnas: `id · titulo · disciplina · fecha · lugar · tipo · descripcion`
+
+- `disciplina`: texto libre (BMX, MTB, Urbano, Ruta…). Aparece como etiqueta.
+- `fecha`: texto libre (ej. `15 Nov 2025`).
+- `tipo`: **Cobertura**, **Patrocinio** o **Próximo** (define el color del sticker).
+
 ## Notas
 
-- Mientras `sheetCsvUrl` esté vacío, la tienda usa el catálogo de respaldo que
-  viene dentro de `tienda.html`.
+- Mientras `sheetCsvUrl` / `eventsCsvUrl` estén vacíos, el sitio usa el
+  catálogo/eventos de respaldo que vienen dentro de `tienda.html`.
 - La vista previa de Claude bloquea conexiones externas, por eso ahí no se carga
   la hoja; en tu dominio/Netlify sí funciona.

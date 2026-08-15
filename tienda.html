@@ -332,8 +332,10 @@ const CFG={
   nombre:'Black Machine Bike Shop',
   whatsapp:'523325899142',
   // Pega aquí la URL CSV de tu Google Sheet publicado (Archivo → Compartir → Publicar en la web → CSV).
-  // Mientras esté vacío, la tienda usa el catálogo de respaldo de abajo.
-  sheetCsvUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vSbNXY1D68DqotcQyeJnB6eiRVVnF2KpP_AdGunVfk1nbo2KVyBZRxF3Rd4tB7jLNXtUqerDfeRVheD/pub?output=csv'
+  // Mientras esté vacío, la tienda usa el catálogo/eventos de respaldo de abajo.
+  sheetCsvUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vSbNXY1D68DqotcQyeJnB6eiRVVnF2KpP_AdGunVfk1nbo2KVyBZRxF3Rd4tB7jLNXtUqerDfeRVheD/pub?output=csv',
+  // URL CSV de la hoja de EVENTOS (otra hoja publicada). Vacío = eventos de respaldo.
+  eventsCsvUrl:''
 };
 const CART_KEY='bm_tienda_cart_v2';
 const money=n=>'$'+n.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0});
@@ -424,7 +426,7 @@ const RIDER=S+'<circle cx="12" cy="7" r="3"/><path d="M6 21c0-4 3-7 6-7s6 3 6 7"
 
 /* ================= DATOS ================= */
 /* --- EVENTOS (ejemplo — reemplaza con los reales) --- */
-const EVENTS=[
+let EVENTS=[
   {id:'e1',title:'BMX Street Jam Zapopan',disc:'BMX',date:'15 Nov 2025',loc:'Skatepark Tabachines, Zapopan',kind:'cobertura',desc:'Jam de street con la comunidad local. Cubrimos la sesión completa, premios y after.'},
   {id:'e2',title:'Copa Jalisco de BMX Racing',disc:'BMX',date:'23 Nov 2025',loc:'Pista BMX, Guadalajara',kind:'patrocinio',desc:'Fecha clave del calendario estatal. Apoyamos a nuestros riders en todas las categorías.'},
   {id:'e3',title:'Rodada Nocturna Black Machine',disc:'Urbano',date:'6 Dic 2025',loc:'Salida: tienda, Av. Tesistán',kind:'proximo',desc:'Rodada abierta a toda la comunidad. Ritmo tranquilo, luces obligatorias, cascadas de tacos al final.'},
@@ -706,10 +708,44 @@ async function loadCatalog(){
   }catch(e){ console.warn('No se pudo cargar el catálogo desde Google Sheets:',e); }
 }
 
+function rowsToEvents(rows){
+  if(!rows.length)return[];
+  const head=rows[0].map(norm);
+  const idx=n=>head.indexOf(n);
+  const col=(r,names)=>{for(const n of names){const i=idx(n);if(i>=0)return (r[i]||'').trim();}return '';};
+  const kindOf=v=>{const k=norm(v);
+    if(k.includes('cobert'))return 'cobertura';
+    if(k.includes('patro'))return 'patrocinio';
+    return 'proximo';};
+  const out=[];
+  for(let i=1;i<rows.length;i++){const r=rows[i];
+    const title=col(r,['titulo','título','nombre','evento','title']); if(!title)continue;
+    out.push({
+      id:col(r,['id'])||('ev'+i),
+      title,
+      disc:col(r,['disciplina','disc'])||'BMX',
+      date:col(r,['fecha','date'])||'',
+      loc:col(r,['lugar','ubicacion','ubicación','loc'])||'',
+      kind:kindOf(col(r,['tipo','kind'])),
+      desc:col(r,['descripcion','descripción','desc'])||''
+    });
+  }
+  return out;
+}
+async function loadEvents(){
+  if(!CFG.eventsCsvUrl)return;
+  try{
+    const res=await fetch(CFG.eventsCsvUrl,{cache:'no-store'});
+    if(!res.ok)throw new Error(res.status);
+    const evs=rowsToEvents(parseCSV((await res.text()).replace(/^﻿/,'')));
+    if(evs.length){ EVENTS=evs; renderEvents(); }
+  }catch(e){ console.warn('No se pudo cargar eventos desde Google Sheets:',e); }
+}
+
 /* --- Init --- */
 $('#search').oninput=renderGrid;$('#sort').onchange=renderGrid;
 renderEvents();renderAthletes();renderFilters();renderGrid();renderProdTeaser();updateCartUI();
-loadCatalog();
+loadCatalog();loadEvents();
 </script>
 </body>
 </html>
