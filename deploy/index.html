@@ -735,29 +735,29 @@ function abrirDetalle(id){
     document.getElementById('printArea').innerHTML=document.getElementById('dlgBody').innerHTML;
     window.print();
   };
+  async function generarPDFFile(){
+    const holder=document.createElement('div');
+    holder.className='receipt';
+    holder.style.cssText='position:fixed;left:-9999px;top:0;width:720px;background:#fff';
+    holder.innerHTML=document.getElementById('dlgBody').innerHTML;
+    document.body.appendChild(holder);
+    const canvas=await html2canvas(holder,{scale:2,backgroundColor:'#ffffff'});
+    document.body.removeChild(holder);
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF('p','mm','a4');
+    const w=210,h=canvas.height*w/canvas.width;
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,w,h);
+    const nombre=(n.folio||'nota')+'_'+(n.cliente||'').replace(/\s+/g,'_')+'.pdf';
+    return {pdf,file:new File([pdf.output('blob')],nombre,{type:'application/pdf'})};
+  }
   document.getElementById('compartir').onclick=async()=>{
     if(!window.jspdf||!window.html2canvas){toast('Cargando… intenta de nuevo en un momento.');return;}
     toast('Generando PDF…');
     try{
-      const holder=document.createElement('div');
-      holder.className='receipt';
-      holder.style.cssText='position:fixed;left:-9999px;top:0;width:720px;background:#fff';
-      holder.innerHTML=document.getElementById('dlgBody').innerHTML;
-      document.body.appendChild(holder);
-      const canvas=await html2canvas(holder,{scale:2,backgroundColor:'#ffffff'});
-      document.body.removeChild(holder);
-      const {jsPDF}=window.jspdf;
-      const pdf=new jsPDF('p','mm','a4');
-      const w=210,h=canvas.height*w/canvas.width;
-      pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,w,h);
-      const nombre=(n.folio||'nota')+'_'+(n.cliente||'').replace(/\s+/g,'_')+'.pdf';
-      const blob=pdf.output('blob');
-      const file=new File([blob],nombre,{type:'application/pdf'});
+      const {pdf,file}=await generarPDFFile();
       if(navigator.canShare&&navigator.canShare({files:[file]})){
         await navigator.share({files:[file],title:'Nota '+n.folio,text:tipoLabel[n.tipo]+' '+n.folio+' · '+TIENDA.nombre});
-      }else{
-        pdf.save(nombre);
-      }
+      }else{pdf.save(file.name);}
     }catch(e){if(e.name!=='AbortError')toast('No se pudo generar el PDF: '+e.message);}
   };
   const ab=document.getElementById('abonar');
@@ -774,9 +774,22 @@ function abrirDetalle(id){
   const en=document.getElementById('entregar');
   if(en)en.onclick=async()=>{n.estado='entregado';try{await DB.update(n);}catch(e){toast('Error: '+e.message);return;}document.getElementById('dlg').close();refresh();};
   const wc=document.getElementById('waCli');
-  if(wc)wc.onclick=()=>{
-    const monto=n.tipo==='apartado'?`Saldo pendiente: ${money(n.saldo)} (de ${money(n.total)})`:`Total: ${money(n.total)}`;
+  if(wc)wc.onclick=async()=>{
+    const conSaldoWA=(n.tipo==='apartado'||n.tipo==='taller')&&(+n.anticipo>0||n.tipo==='apartado');
+    const monto=conSaldoWA?`Saldo pendiente: ${money(n.saldo)} (de ${money(n.total)})`:`Total: ${money(n.total)}`;
     const msg=`Hola ${n.cliente}, gracias por tu preferencia en ${TIENDA.nombre}.\n${tipoLabel[n.tipo]} ${n.folio}\n${monto}\nPago: ${n.pago||'—'}`;
+    // Enviar el PDF junto al texto por el menú de compartir (incluye WhatsApp)
+    if(window.jspdf&&window.html2canvas&&navigator.canShare){
+      toast('Generando PDF…');
+      try{
+        const {file}=await generarPDFFile();
+        if(navigator.canShare({files:[file]})){
+          await navigator.share({files:[file],text:msg});
+          return;
+        }
+      }catch(e){if(e.name==='AbortError')return;}
+    }
+    // Respaldo: abrir el chat del cliente solo con el texto
     window.open(waLink(n.wa)+'?text='+encodeURIComponent(msg),'_blank');
   };
   document.getElementById('borrar').onclick=async()=>{
