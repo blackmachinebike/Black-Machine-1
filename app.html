@@ -938,10 +938,12 @@ function abrirDetalle(id){
     ${n.tipo==='taller'&&n.estado==='proceso'?'<button class="btn sm" id="entregar">Marcar entregado</button>':''}
     ${n.wa?`<button class="btn sm" id="waCli" style="background:#25D366">WhatsApp cliente</button>`:''}
     <button class="btn sm" id="compartir" style="background:#0a7">Compartir / Enviar</button>
+    <button class="btn sec sm" id="editar">Editar</button>
     <button class="btn sec sm" id="imprimir">Imprimir / PDF</button>
     <button class="btn sec sm" id="borrar">Eliminar</button>
     <button class="btn sec sm" onclick="document.getElementById('dlg').close()">Cerrar</button>`;
   document.getElementById('dlg').showModal();
+  document.getElementById('editar').onclick=()=>{document.getElementById('dlg').close();editarNota(n.id);};
   document.getElementById('imprimir').onclick=()=>{
     document.getElementById('printArea').innerHTML=document.getElementById('dlgBody').innerHTML;
     window.print();
@@ -1008,6 +1010,81 @@ function abrirDetalle(id){
       try{await DB.remove(id);}catch(e){toast('Error: '+e.message);return;}
       document.getElementById('dlg').close();refresh();toast('Nota eliminada.');
     }
+  };
+}
+
+// Editar una nota ya hecha: modificar conceptos (agregar/quitar productos), cliente, fecha, pago y notas.
+function editarNota(id){
+  const n=notas.find(x=>x.id===id);if(!n)return;
+  const d=document.getElementById('prod');
+  const conSaldo=(n.tipo==='apartado'||n.tipo==='taller');
+  const itemRow=(it={desc:'',cant:1,precio:''})=>`<tr>
+    <td><input class="e-desc up" list="prodList" value="${esc(it.desc)}"></td>
+    <td><input class="e-cant" type="number" min="0" step="1" value="${it.cant}" style="width:66px"></td>
+    <td><input class="e-precio" type="number" min="0" step="0.01" value="${it.precio}" style="width:92px"></td>
+    <td><button class="btn sec sm e-del">✕</button></td></tr>`;
+  d.innerHTML=`<div class="dlg-body" style="max-height:80vh;overflow:auto">
+    <h2 style="margin:0 0 14px;font-size:16px">Editar nota ${n.folio}</h2>
+    <div class="grid">
+      <div style="grid-column:1/-1"><label>Cliente</label><input id="eCliente" class="up" value="${esc(n.cliente)}"></div>
+      <div><label>Fecha</label><input id="eFecha" type="date" value="${esc(n.fecha)}"></div>
+      <div><label>Método de pago</label><select id="ePago">${PAGOS.map(p=>`<option${p===n.pago?' selected':''}>${p}</option>`).join('')}</select></div>
+    </div>
+    <h3 style="margin:16px 0 6px;font-size:14px">Conceptos</h3>
+    <table class="items-table">
+      <thead><tr><th style="width:52%">Descripción</th><th>Cant.</th><th>Precio</th><th></th></tr></thead>
+      <tbody id="eItems">${n.items.map(itemRow).join('')}</tbody>
+    </table>
+    <div class="row"><button class="btn sec sm" id="eAdd">+ Agregar concepto</button></div>
+    <div class="total-line" style="margin-top:12px">Total: <span id="eTotal">$0.00</span></div>
+    ${conSaldo?`<div class="total-line" style="font-size:14px;color:var(--muted)">Anticipo / abonos: ${money(n.anticipo)} · Saldo: <span id="eSaldo">$0.00</span></div>`:''}
+    <div style="margin-top:12px"><label>Notas / Observaciones</label><textarea id="eObs" class="up">${esc(n.obs)}</textarea></div>
+  </div>
+  <div class="dlg-actions">
+    <button class="btn sec sm" id="eCancel">Cancelar</button>
+    <button class="btn sm" id="eGuardar">Guardar cambios</button>
+  </div>`;
+  d.showModal();
+  const eItems=d.querySelector('#eItems');
+  function eRecalc(){
+    let total=0;
+    eItems.querySelectorAll('tr').forEach(tr=>{
+      total+=(+tr.querySelector('.e-cant').value||0)*(+tr.querySelector('.e-precio').value||0);
+    });
+    d.querySelector('#eTotal').textContent=money(total);
+    const s=d.querySelector('#eSaldo');if(s)s.textContent=money(Math.max(0,total-(+n.anticipo||0)));
+    return total;
+  }
+  function bindRows(){
+    eItems.querySelectorAll('tr').forEach(tr=>{
+      tr.querySelectorAll('input').forEach(i=>i.oninput=eRecalc);
+      const desc=tr.querySelector('.e-desc');
+      desc.onchange=()=>{const p=productos.find(x=>(x.nombre||'').toUpperCase()===desc.value.trim().toUpperCase());if(p){const pr=tr.querySelector('.e-precio');if(!(+pr.value>0)){pr.value=p.precio;eRecalc();}}};
+      tr.querySelector('.e-del').onclick=()=>{tr.remove();eRecalc();};
+    });
+  }
+  bindRows();eRecalc();
+  d.querySelector('#eAdd').onclick=()=>{eItems.insertAdjacentHTML('beforeend',itemRow());bindRows();eRecalc();};
+  d.querySelector('#eCancel').onclick=()=>d.close();
+  d.querySelector('#eGuardar').onclick=async()=>{
+    const items=[...eItems.querySelectorAll('tr')].map(tr=>({
+      desc:tr.querySelector('.e-desc').value.trim(),
+      cant:+tr.querySelector('.e-cant').value||0,
+      precio:+tr.querySelector('.e-precio').value||0
+    })).filter(i=>i.desc);
+    const cliente=d.querySelector('#eCliente').value.trim();
+    if(!cliente){toast('Ingresa el nombre del cliente.');return;}
+    if(!items.length){toast('La nota debe tener al menos un concepto.');return;}
+    n.items=items;
+    n.cliente=cliente;
+    n.fecha=d.querySelector('#eFecha').value||n.fecha;
+    n.pago=d.querySelector('#ePago').value;
+    n.obs=d.querySelector('#eObs').value.trim();
+    n.total=items.reduce((s,i)=>s+i.cant*i.precio,0);
+    n.saldo=Math.max(0,n.total-(+n.anticipo||0));
+    const btn=d.querySelector('#eGuardar');btn.disabled=true;
+    try{await DB.update(n);}catch(e){toast('Error al guardar: '+e.message);btn.disabled=false;return;}
+    d.close();refresh();toast('Nota '+n.folio+' actualizada.');
   };
 }
 

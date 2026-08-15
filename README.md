@@ -17,6 +17,9 @@ instalación ni servidor. Los datos se guardan localmente en el navegador
   - *Apartado:* registra anticipo/abono y calcula el saldo pendiente. Permite abonar después.
   - *Taller:* datos de la bicicleta, diagnóstico del servicio y estado (en proceso / entregado).
 - **Notas registradas:** búsqueda por cliente/folio/concepto, filtro por tipo, detalle imprimible y eliminación.
+- **Editar nota:** desde el detalle de cualquier nota, el botón **Editar** permite agregar o
+  quitar productos, cambiar cantidades/precios, cliente, fecha, pago y observaciones. El total
+  y el saldo pendiente se recalculan solos (los abonos/anticipos ya registrados se conservan).
 - **Productos (catálogo con foto):** registra cada producto una sola vez (nombre, precio,
   categoría y **foto**). Luego, al hacer una nota, lo eliges desde **📷 Del catálogo** o
   escribiendo su nombre (autocompleta el precio) en vez de teclearlo cada vez.
