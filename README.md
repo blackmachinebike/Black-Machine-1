@@ -17,6 +17,12 @@ instalación ni servidor. Los datos se guardan localmente en el navegador
   - *Apartado:* registra anticipo/abono y calcula el saldo pendiente. Permite abonar después.
   - *Taller:* datos de la bicicleta, diagnóstico del servicio y estado (en proceso / entregado).
 - **Notas registradas:** búsqueda por cliente/folio/concepto, filtro por tipo, detalle imprimible y eliminación.
+- **Productos (catálogo con foto):** registra cada producto una sola vez (nombre, precio,
+  categoría y **foto**). Luego, al hacer una nota, lo eliges desde **📷 Del catálogo** o
+  escribiendo su nombre (autocompleta el precio) en vez de teclearlo cada vez.
+  - Las fotos se toman con la cámara del celular o se eligen de la galería y se
+    **comprimen automáticamente** en el navegador (no hay que configurar nada).
+  - En modo nube, el catálogo se comparte y sincroniza entre todos los dispositivos.
 - **Exportar CSV:** descarga todas las notas en un archivo compatible con Excel.
 - **Folios automáticos:** V0001 (venta), A0001 (apartado), T0001 (taller).
 
@@ -32,6 +38,8 @@ instalación ni servidor. Los datos se guardan localmente en el navegador
 
 Sigue la guía **`SETUP.md`** (≈15 min, gratis). Resumen:
 1. Crear proyecto en Supabase y correr `supabase-setup.sql`.
+   *(Si ya tenías la base creada antes del catálogo, corre además
+   `supabase-migracion-productos.sql` una sola vez para habilitar los productos.)*
 2. Crear tu usuario (correo + contraseña) en Authentication.
 3. Pegar *Project URL* y *anon key* en `app.html` (constante `CFG`).
 4. Publicar en el subdominio `notas.blackmachinebike.com` (el e-commerce en

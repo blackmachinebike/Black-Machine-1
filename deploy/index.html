@@ -82,6 +82,27 @@
   #auth .box input{margin-bottom:12px}
   #auth .box .btn{width:100%;margin-top:6px;padding:12px}
   #auth .err{color:#ef4444;font-size:13px;min-height:18px;margin-top:10px}
+  /* ---- Productos (catálogo) ---- */
+  .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+  .prod{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .prod .ph{aspect-ratio:1;background:var(--panel2);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .prod .ph img{width:100%;height:100%;object-fit:cover}
+  .prod .ph .noimg{color:var(--muted);font-size:34px}
+  .prod .pb{padding:10px;display:flex;flex-direction:column;gap:3px;flex:1}
+  .prod .pn{font-weight:700;font-size:14px;line-height:1.2}
+  .prod .pp{color:var(--accent2);font-weight:800}
+  .prod .pc{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  .prod .pa{display:flex;gap:6px;padding:0 10px 10px}
+  .prod .pa .btn{flex:1;text-align:center}
+  .foto-drop{border:1px dashed var(--line);border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:var(--panel2);color:var(--muted)}
+  .foto-prev{width:130px;height:130px;object-fit:cover;border-radius:10px;margin:0 auto;display:block}
+  .pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;max-height:56vh;overflow:auto;margin-top:10px}
+  .pick{cursor:pointer;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2)}
+  .pick img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+  .pick .noimg{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:26px}
+  .pick .pkb{padding:6px 8px}
+  .pick .pkn{font-size:12px;font-weight:600;line-height:1.2}
+  .pick .pkp{font-size:12px;color:var(--accent2);font-weight:700}
   /* ---- Recibo / PDF ---- */
   .receipt{background:#fff;color:#1a1a1a;border-radius:8px;padding:26px 30px;font-size:13px}
   .receipt .r-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:14px}
@@ -147,6 +168,7 @@
     <button data-view="nueva">Nueva nota</button>
     <button data-view="lista">Notas registradas</button>
     <button data-view="clientes">Clientes</button>
+    <button data-view="productos">Productos</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -214,7 +236,8 @@
         <thead><tr><th style="width:50%">Descripción</th><th>Cant.</th><th>Precio unit.</th><th>Importe</th><th></th></tr></thead>
         <tbody id="itemsBody"></tbody>
       </table>
-      <div class="row"><button class="btn sec sm" id="addItem">+ Agregar concepto</button></div>
+      <datalist id="prodList"></datalist>
+      <div class="row"><button class="btn sec sm" id="addItem">+ Agregar concepto</button><button class="btn sec sm" id="pickProd">📷 Del catálogo</button></div>
 
       <!-- Pago apartado -->
       <div id="grpApartado" class="grid hidden" style="margin-top:14px">
@@ -241,6 +264,16 @@
     <div class="note-list" id="listaClientes"></div>
   </div>
 
+  <!-- PRODUCTOS (catálogo) -->
+  <div id="view-productos" class="hidden">
+    <div class="toolbar">
+      <input id="buscarProd" placeholder="Buscar producto por nombre o categoría...">
+      <select id="filtroCat"><option value="">Todas las categorías</option></select>
+      <button class="btn" id="btnNuevoProd">+ Nuevo producto</button>
+    </div>
+    <div class="prod-grid" id="listaProductos"></div>
+  </div>
+
   <!-- LISTA -->
   <div id="view-lista" class="hidden">
     <div class="toolbar">
@@ -263,6 +296,7 @@
   <div class="dlg-actions" id="dlgActions"></div>
 </dialog>
 <dialog id="ask"></dialog>
+<dialog id="prod"></dialog>
 <div id="printArea" class="receipt"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -382,6 +416,27 @@ const money=n=>'$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let notas=[];
 let clientes=[];
+let productos=[];
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// Reduce y comprime la foto en el navegador (sin subirla a ningún lado extra):
+// redimensiona a máx. 900px y la guarda como JPEG ligero. Rápido y sin configurar Storage.
+function compressImage(file,maxDim=900,quality=0.72){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.naturalWidth,h=img.naturalHeight;
+      const scale=Math.min(1,maxDim/Math.max(w,h));
+      w=Math.max(1,Math.round(w*scale));h=Math.max(1,Math.round(h*scale));
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(img.src);
+      res(c.toDataURL('image/jpeg',quality));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(img.src);rej(new Error('No se pudo leer la imagen'));};
+    img.src=URL.createObjectURL(file);
+  });
+}
 
 // Reintenta operaciones de red ante fallos temporales de conexión
 async function withRetry(fn,tries=3){
@@ -428,6 +483,26 @@ const DB={
     }
     await withRetry(async()=>{const {error}=await sb.from('clientes').upsert(c);if(error)throw error;});
   },
+  async productosAll(){
+    if(!CLOUD)return JSON.parse(localStorage.getItem('bm_productos_v1')||'[]');
+    const {data,error}=await sb.from('productos').select('*').order('nombre');
+    if(error)return productos;
+    return data;
+  },
+  async productoUpsert(p){
+    if(!CLOUD){
+      const arr=JSON.parse(localStorage.getItem('bm_productos_v1')||'[]').filter(x=>x.id!==p.id);
+      arr.push(p);localStorage.setItem('bm_productos_v1',JSON.stringify(arr));return;
+    }
+    await withRetry(async()=>{const {error}=await sb.from('productos').upsert(p);if(error)throw error;});
+  },
+  async productoRemove(id){
+    if(!CLOUD){
+      const arr=JSON.parse(localStorage.getItem('bm_productos_v1')||'[]').filter(x=>x.id!==id);
+      localStorage.setItem('bm_productos_v1',JSON.stringify(arr));return;
+    }
+    const {error}=await sb.from('productos').delete().eq('id',id);if(error)throw error;
+  },
   async loadConfig(){
     if(!CLOUD)return;
     const {data}=await sb.from('config').select('*').eq('id',1).maybeSingle();
@@ -443,10 +518,11 @@ const DB={
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
-  ['dashboard','nueva','lista','clientes'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==b.dataset.view));
+  ['dashboard','nueva','lista','clientes','productos'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==b.dataset.view));
   if(b.dataset.view==='dashboard')renderDashboard();
   if(b.dataset.view==='lista')renderLista();
   if(b.dataset.view==='clientes')renderClientes();
+  if(b.dataset.view==='productos')renderProductos();
 });
 
 // ---- Formulario ----
@@ -466,17 +542,32 @@ document.getElementById('cHasta').onchange=renderCorte;
 
 function addItemRow(desc='',cant=1,precio=''){
   const tr=document.createElement('tr');
-  tr.innerHTML=`<td><input class="i-desc up" value="${desc}"></td>
+  tr.innerHTML=`<td><input class="i-desc up" list="prodList" value="${desc}"></td>
     <td><input class="i-cant" type="number" min="0" step="1" value="${cant}" style="width:70px"></td>
     <td><input class="i-precio" type="number" min="0" step="0.01" value="${precio}" style="width:100px"></td>
     <td class="i-importe">$0.00</td>
     <td><button class="btn sec sm i-del">✕</button></td>`;
   itemsBody.appendChild(tr);
   tr.querySelectorAll('input').forEach(i=>i.oninput=recalc);
+  // Al escribir/elegir el nombre de un producto del catálogo, autocompleta el precio
+  const descInp=tr.querySelector('.i-desc');
+  descInp.addEventListener('change',()=>{
+    const p=productos.find(x=>(x.nombre||'').toUpperCase()===descInp.value.trim().toUpperCase());
+    if(p){const pr=tr.querySelector('.i-precio');if(!(+pr.value>0)){pr.value=p.precio;recalc();}}
+  });
   tr.querySelector('.i-del').onclick=()=>{tr.remove();recalc()};
   recalc();
 }
 document.getElementById('addItem').onclick=()=>addItemRow();
+// Toma una fila vacía o crea una nueva y la llena con el producto elegido
+function addOrFillItem(desc,precio){
+  const target=[...itemsBody.querySelectorAll('tr')].find(tr=>!tr.querySelector('.i-desc').value.trim());
+  if(!target){addItemRow(desc,1,precio);return;}
+  target.querySelector('.i-desc').value=desc;
+  target.querySelector('.i-precio').value=precio;
+  recalc();
+}
+document.getElementById('pickProd').onclick=()=>abrirPickerProductos();
 
 function recalc(){
   let total=0;
@@ -661,6 +752,126 @@ function autofillCliente(){
 document.getElementById('fCliente').addEventListener('change',autofillCliente);
 document.getElementById('fWa').addEventListener('change',autofillCliente);
 
+// ---- Productos (catálogo con foto) ----
+// Alimenta el autocompletado de descripción en las notas
+function refreshProdList(){
+  const dl=document.getElementById('prodList');
+  if(dl)dl.innerHTML=productos.map(p=>`<option value="${esc(p.nombre)}">${money(p.precio)}${p.categoria?' · '+esc(p.categoria):''}</option>`).join('');
+}
+function renderProductos(){
+  const q=(document.getElementById('buscarProd').value||'').toLowerCase();
+  const sel=document.getElementById('filtroCat');
+  const cur=sel.value;
+  const cats=[...new Set(productos.map(p=>p.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option${c===cur?' selected':''}>${esc(c)}</option>`).join('');
+  const cat=sel.value;
+  const list=productos.filter(p=>{
+    if(cat&&p.categoria!==cat)return false;
+    return ((p.nombre||'')+' '+(p.categoria||'')).toLowerCase().includes(q);
+  }).sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+  const el=document.getElementById('listaProductos');
+  el.innerHTML=list.map(p=>`
+    <div class="prod" data-id="${p.id}">
+      <div class="ph">${p.foto?`<img src="${p.foto}" alt="${esc(p.nombre)}">`:'<span class="noimg">📦</span>'}</div>
+      <div class="pb"><div class="pn">${esc(p.nombre)}</div><div class="pp">${money(p.precio)}</div>${p.categoria?`<div class="pc">${esc(p.categoria)}</div>`:''}</div>
+      <div class="pa"><button class="btn sec sm p-edit">Editar</button><button class="btn sec sm p-del">Eliminar</button></div>
+    </div>`).join('')||'<div class="empty">Aún no hay productos. Toca «+ Nuevo producto» para agregar el primero (con su foto).</div>';
+  el.querySelectorAll('.prod').forEach(c=>{
+    const id=c.dataset.id;
+    c.querySelector('.p-edit').onclick=()=>editarProducto(id);
+    c.querySelector('.p-del').onclick=async()=>{
+      const p=productos.find(x=>x.id===id);
+      if(await confirmModal('¿Eliminar el producto «'+(p?p.nombre:'')+'»? Esta acción no se puede deshacer.')){
+        try{await DB.productoRemove(id);}catch(e){toast('Error: '+e.message);return;}
+        productos=productos.filter(x=>x.id!==id);renderProductos();refreshProdList();toast('Producto eliminado.');
+      }
+    };
+  });
+}
+function editarProducto(id){
+  const p=id?productos.find(x=>x.id===id):null;
+  let fotoData=p?(p.foto||''):'';
+  const cats=[...new Set(productos.map(x=>x.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const d=document.getElementById('prod');
+  const fotoBoxHTML=()=>fotoData?`<img class="foto-prev" src="${fotoData}">`:'📷 Toca para tomar una foto o elegir de la galería';
+  d.innerHTML=`<div class="dlg-body">
+    <h2 style="margin:0 0 14px;font-size:16px">${p?'Editar producto':'Nuevo producto'}</h2>
+    <div class="grid">
+      <div style="grid-column:1/-1"><label>Nombre del producto</label><input id="pNombre" class="up" value="${esc(p?p.nombre:'')}" placeholder="Ej. CÁMARA R26"></div>
+      <div><label>Precio</label><input id="pPrecio" type="number" min="0" step="0.01" value="${p?p.precio:''}" placeholder="0.00"></div>
+      <div><label>Categoría (opcional)</label><input id="pCat" class="up" list="catList" value="${esc(p?p.categoria:'')}" placeholder="Ej. LLANTAS"><datalist id="catList">${cats.map(c=>`<option value="${esc(c)}">`).join('')}</datalist></div>
+    </div>
+    <div style="margin-top:12px">
+      <label>Foto del producto</label>
+      <div class="foto-drop" id="fotoDrop"><div id="fotoBox">${fotoBoxHTML()}</div></div>
+      <input type="file" id="pFoto" accept="image/*" capture="environment" class="hidden">
+      <div class="row" style="margin-top:8px"><button class="btn sec sm ${fotoData?'':'hidden'}" id="pQuitarFoto">Quitar foto</button></div>
+    </div>
+  </div>
+  <div class="dlg-actions">
+    <button class="btn sec sm" id="pCancel">Cancelar</button>
+    <button class="btn sm" id="pGuardar">Guardar producto</button>
+  </div>`;
+  d.showModal();
+  const fileInp=d.querySelector('#pFoto');
+  const box=d.querySelector('#fotoBox');
+  const quitar=d.querySelector('#pQuitarFoto');
+  d.querySelector('#fotoDrop').onclick=()=>fileInp.click();
+  fileInp.onchange=async()=>{
+    const f=fileInp.files[0];if(!f)return;
+    box.textContent='Procesando foto…';
+    try{
+      fotoData=await compressImage(f);
+      box.innerHTML=`<img class="foto-prev" src="${fotoData}">`;
+      quitar.classList.remove('hidden');
+    }catch(e){box.textContent='No se pudo procesar la imagen. Intenta con otra.';}
+    fileInp.value='';
+  };
+  quitar.onclick=()=>{fotoData='';box.textContent='📷 Toca para tomar una foto o elegir de la galería';quitar.classList.add('hidden');};
+  d.querySelector('#pCancel').onclick=()=>d.close();
+  d.querySelector('#pGuardar').onclick=async()=>{
+    const nombre=d.querySelector('#pNombre').value.trim();
+    const precio=+d.querySelector('#pPrecio').value||0;
+    if(!nombre){toast('Escribe el nombre del producto.');return;}
+    const prod={id:p?p.id:uid(),nombre,precio,categoria:d.querySelector('#pCat').value.trim(),foto:fotoData||'',creada:p?p.creada:new Date().toISOString()};
+    const btn=d.querySelector('#pGuardar');btn.disabled=true;
+    try{await DB.productoUpsert(prod);}
+    catch(e){toast('Error al guardar: '+e.message);btn.disabled=false;return;}
+    productos=productos.filter(x=>x.id!==prod.id);productos.push(prod);
+    d.close();renderProductos();refreshProdList();toast('Producto guardado.');
+  };
+}
+// Selector visual para agregar productos como conceptos de la nota
+function abrirPickerProductos(){
+  const d=document.getElementById('prod');
+  const draw=(f='')=>{
+    const list=productos.filter(p=>((p.nombre||'')+' '+(p.categoria||'')).toLowerCase().includes(f.toLowerCase()))
+      .sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+    return list.map(p=>`<div class="pick" data-id="${p.id}">
+      ${p.foto?`<img src="${p.foto}">`:'<div class="noimg">📦</div>'}
+      <div class="pkb"><div class="pkn">${esc(p.nombre)}</div><div class="pkp">${money(p.precio)}</div></div></div>`).join('')
+      ||'<div class="empty">Sin productos en el catálogo. Agrégalos en la pestaña «Productos».</div>';
+  };
+  d.innerHTML=`<div class="dlg-body">
+    <h2 style="margin:0 0 4px;font-size:16px">Agregar del catálogo</h2>
+    <input id="pickSearch" placeholder="Buscar producto...">
+    <div class="pick-grid" id="pickGrid">${draw()}</div>
+  </div>
+  <div class="dlg-actions"><button class="btn sec sm" id="pickClose">Listo</button></div>`;
+  d.showModal();
+  const grid=d.querySelector('#pickGrid');
+  const bind=()=>grid.querySelectorAll('.pick').forEach(c=>c.onclick=()=>{
+    const p=productos.find(x=>x.id===c.dataset.id);if(!p)return;
+    addOrFillItem(p.nombre,p.precio);toast('Agregado: '+p.nombre);
+  });
+  bind();
+  d.querySelector('#pickSearch').oninput=e=>{grid.innerHTML=draw(e.target.value);bind();};
+  d.querySelector('#pickClose').onclick=()=>d.close();
+}
+document.getElementById('buscarProd').oninput=renderProductos;
+document.getElementById('filtroCat').onchange=renderProductos;
+document.getElementById('btnNuevoProd').onclick=()=>editarProducto(null);
+
 function noteHTML(n){
   const estado=n.tipo==='apartado'?(n.saldo<=0?'pagado':'pendiente'):(n.tipo==='taller'?n.estado:'');
   const estBadge=estado?`<span class="badge ${estado}">${estado==='proceso'?'en proceso':estado}</span>`:'';
@@ -822,12 +1033,15 @@ async function startApp(){
   renderHeader();
   notas=await DB.all();
   clientes=await DB.clientesAll();
+  productos=await DB.productosAll();
   refreshClienteList();
+  refreshProdList();
   refresh();
   if(CLOUD){
     sb.channel('notas-rt')
       .on('postgres_changes',{event:'*',schema:'public',table:'notas'},async()=>{notas=await DB.all();refresh();})
       .on('postgres_changes',{event:'*',schema:'public',table:'clientes'},async()=>{clientes=await DB.clientesAll();refreshClienteList();})
+      .on('postgres_changes',{event:'*',schema:'public',table:'productos'},async()=>{productos=await DB.productosAll();refreshProdList();if(!document.getElementById('view-productos').classList.contains('hidden'))renderProductos();})
       .subscribe();
   }
 }
