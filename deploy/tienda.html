@@ -197,6 +197,38 @@
   .foot .btn{width:100%;background:var(--green);color:#04210f;border:none;padding:13px;border-radius:10px;cursor:pointer;font-weight:800;font-size:15px;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
   .foot .btn:hover{filter:brightness(1.06)}
   .foot .note{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px}
+  .citem .cvar{font-size:11px;color:var(--chrome);font-family:var(--mono);margin-top:2px}
+  /* Ficha de producto */
+  .pmodal{position:fixed;z-index:41;top:50%;left:50%;transform:translate(-50%,-48%) scale(.98);opacity:0;pointer-events:none;
+    width:min(920px,94vw);max-height:92vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    display:grid;grid-template-columns:1fr 1fr;transition:opacity .2s,transform .2s}
+  .pmodal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .pm-x{position:absolute;top:10px;right:12px;z-index:2;background:rgba(0,0,0,.4);border:none;color:#fff;font-size:26px;line-height:1;width:34px;height:34px;border-radius:8px;cursor:pointer}
+  .pm-media{background:radial-gradient(circle at 50% 40%,#232733,#12151b);padding:16px;display:flex;flex-direction:column;gap:10px}
+  .pm-frame{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:var(--panel2)}
+  .pm-iconbg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .pm-iconbg svg{width:88px;height:88px;opacity:.7}
+  .pm-main{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .pm-thumbs{display:flex;gap:8px;flex-wrap:wrap}
+  .pm-thumbs img{width:56px;height:56px;object-fit:cover;border-radius:7px;cursor:pointer;border:2px solid transparent;opacity:.75}
+  .pm-thumbs img.active{border-color:var(--accent);opacity:1}
+  .pm-body{padding:22px}
+  .pm-body .cat{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-family:var(--mono)}
+  .pm-body h3{margin:6px 0 4px;font-size:24px;font-weight:800;text-transform:uppercase;letter-spacing:-.5px;line-height:1.05}
+  .pm-brand{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--chrome)}
+  .pm-price{font-family:var(--mono);font-size:26px;font-weight:800;margin:14px 0;letter-spacing:-.5px}
+  .pm-price small{font-size:14px;color:var(--muted);text-decoration:line-through;margin-left:8px;font-weight:600}
+  .pm-desc{color:var(--muted);font-size:13.5px;line-height:1.5;margin:0 0 16px}
+  .pm-opts{margin-bottom:14px}
+  .pm-lbl{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:7px}
+  .pm-chips{display:flex;gap:8px;flex-wrap:wrap}
+  .opt{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700}
+  .opt.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .pm-add{width:100%;padding:14px;font-size:15px;margin-top:4px}
+  .pm-add:disabled{background:var(--panel2);color:var(--muted);cursor:not-allowed}
+  .pm-note{font-size:12px;color:var(--amber);text-align:center;margin-top:10px;min-height:1em}
+  @media(max-width:640px){.pmodal{grid-template-columns:1fr;top:0;left:0;transform:none;width:100vw;max-height:100vh;height:100%;border-radius:0}
+    .pmodal.open{transform:none}}
   /* Footer */
   footer{border-top:1px solid var(--line);margin-top:50px;background:#0b0d11}
   .promise{background:linear-gradient(90deg,#000,#15080a);border-bottom:1px solid var(--line)}
@@ -325,6 +357,26 @@
   <div class="body" id="cartBody"></div>
   <div class="foot" id="cartFoot"></div>
 </aside>
+<div class="overlay" id="pOverlay"></div>
+<div class="pmodal" id="pModal" role="dialog" aria-label="Producto">
+  <button class="x pm-x" id="pClose" aria-label="Cerrar">×</button>
+  <div class="pm-media">
+    <div class="pm-frame"><span class="pm-iconbg" id="pmIcon"></span><img id="pmMain" class="pm-main" alt=""></div>
+    <div class="pm-thumbs" id="pmThumbs"></div>
+  </div>
+  <div class="pm-body">
+    <span class="cat" id="pmCat"></span>
+    <h3 id="pmName"></h3>
+    <div class="pm-brand" id="pmBrand"></div>
+    <div class="pm-price" id="pmPrice"></div>
+    <p class="pm-desc" id="pmDesc"></p>
+    <div class="pm-opts" id="pmColors"></div>
+    <div class="pm-opts" id="pmSizes"></div>
+    <button class="btn pm-add" id="pmAdd">Agregar al carrito</button>
+    <div class="pm-note" id="pmNote"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -575,18 +627,46 @@ function saveCart(){localStorage.setItem(CART_KEY,JSON.stringify(cart));}
 function cartQty(){return Object.values(cart).reduce((a,b)=>a+b,0);}
 function cartTotal(){return Object.entries(cart).reduce((t,[id,q])=>{const p=PRODUCTS.find(x=>x.id===id);return t+(p?p.price*q:0);},0);}
 
-function prodCard(p){
+const mainPhoto=p=>p.foto||('assets/productos/'+p.id+'.jpg');
+let GROUPS=[], GROUPMAP={};
+function buildGroups(){
+  const map=new Map();
+  PRODUCTS.forEach(p=>{
+    const key=(p.grupo&&String(p.grupo).trim())?('g:'+String(p.grupo).trim().toLowerCase()):('id:'+p.id);
+    if(!map.has(key))map.set(key,[]);
+    map.get(key).push(p);
+  });
+  GROUPS=[...map.entries()].map(([key,vs])=>{
+    const base=vs[0];
+    const prices=vs.map(v=>v.price).filter(n=>n>0);
+    return {key,base,variants:vs,
+      minP:prices.length?Math.min(...prices):0, maxP:prices.length?Math.max(...prices):0,
+      colors:[...new Set(vs.map(v=>v.color).filter(Boolean))],
+      sizes:[...new Set(vs.map(v=>v.medida).filter(Boolean))],
+      inStock:vs.some(v=>v.stock),
+      brand:base.brand, cat:base.cat, name:base.name, desc:base.desc, tag:base.tag};
+  });
+  GROUPMAP={}; GROUPS.forEach(g=>GROUPMAP[g.key]=g);
+}
+function groupCard(g){
+  const base=g.base;
+  const priceTxt=g.minP===g.maxP?money(g.minP):('desde '+money(g.minP));
+  const multi=g.variants.length>1||g.colors.length||g.sizes.length;
+  let btn;
+  if(!g.inStock)btn='<button class="add" disabled>Agotado</button>';
+  else if(multi)btn=`<button class="add" data-group="${g.key}">Ver opciones</button>`;
+  else btn=`<button class="add" data-id="${base.id}">Agregar al carrito</button>`;
+  const tag=base.tag?`<span class="tag${g.inStock?'':' out'}">${g.inStock?base.tag:'Agotado'}</span>`:(g.inStock?'':'<span class="tag out">Agotado</span>');
   return `<div class="prod">
-    <div class="ph">${ICONS[p.cat]||ICONS.accesorios}
-      <img class="prod-img" src="${p.foto||('assets/productos/'+p.id+'.jpg')}" alt="${p.name}" loading="lazy" onerror="this.remove()">
-      ${p.tag?`<span class="tag${p.stock?'':' out'}">${p.stock?p.tag:'Agotado'}</span>`:(p.stock?'':'<span class="tag out">Agotado</span>')}
-      <span class="brand">${p.brand}</span></div>
+    <div class="ph"${multi?` data-group="${g.key}" style="cursor:pointer"`:''}>${ICONS[g.cat]||ICONS.accesorios}
+      <img class="prod-img" src="${mainPhoto(base)}" alt="${g.name}" loading="lazy" onerror="this.remove()">
+      ${tag}<span class="brand">${g.brand}</span></div>
     <div class="info">
-      <span class="cat">${catLabel(p.cat)}</span>
-      <span class="name">${p.name}</span>
-      <span class="desc">${p.desc}</span>
-      <span class="price">${money(p.price)}${p.price_old?`<small>${money(p.price_old)}</small>`:''}</span>
-      <button class="add" data-id="${p.id}" ${p.stock?'':'disabled'}>${p.stock?'Agregar al carrito':'No disponible'}</button>
+      <span class="cat">${catLabel(g.cat)}</span>
+      <span class="name">${g.name}</span>
+      <span class="desc">${g.desc}</span>
+      <span class="price">${priceTxt}${base.price_old?`<small>${money(base.price_old)}</small>`:''}</span>
+      ${btn}
     </div></div>`;
 }
 function renderFilters(){
@@ -600,20 +680,75 @@ function renderFilters(){
 function renderGrid(){
   const q=$('#search').value.trim().toLowerCase();
   const sort=$('#sort').value;
-  let list=PRODUCTS.filter(p=>(activeCat==='todos'||p.cat===activeCat)&&(activeBrand==='todas'||p.brand===activeBrand)&&
-    (!q||p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)||p.brand.toLowerCase().includes(q)));
-  if(sort==='price-asc')list.sort((a,b)=>a.price-b.price);
-  else if(sort==='price-desc')list.sort((a,b)=>b.price-a.price);
+  let list=GROUPS.filter(g=>(activeCat==='todos'||g.cat===activeCat)&&(activeBrand==='todas'||g.brand===activeBrand)&&
+    (!q||g.name.toLowerCase().includes(q)||g.desc.toLowerCase().includes(q)||g.brand.toLowerCase().includes(q)));
+  if(sort==='price-asc')list.sort((a,b)=>a.minP-b.minP);
+  else if(sort==='price-desc')list.sort((a,b)=>b.minP-a.minP);
   else if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));
   $('#count').textContent=`${list.length} producto${list.length===1?'':'s'}`;
-  $('#grid').innerHTML=list.length?list.map(prodCard).join(''):'<div class="empty">No encontramos productos con esos criterios.</div>';
+  $('#grid').innerHTML=list.length?list.map(groupCard).join(''):'<div class="empty">No encontramos productos con esos criterios.</div>';
   bindAdd();
 }
 function renderProdTeaser(){
-  $('#prodTeaser').innerHTML=PRODUCTS.filter(p=>p.tag==='Top').slice(0,4).map(prodCard).join('');
+  $('#prodTeaser').innerHTML=GROUPS.filter(g=>g.tag==='Top').slice(0,4).map(groupCard).join('');
   bindAdd();
 }
-function bindAdd(){document.querySelectorAll('.add').forEach(b=>b.onclick=()=>addToCart(b.dataset.id));}
+function bindAdd(){
+  document.querySelectorAll('.add[data-id]').forEach(b=>b.onclick=()=>addToCart(b.dataset.id));
+  document.querySelectorAll('[data-group]').forEach(b=>b.onclick=()=>openProduct(b.dataset.group));
+}
+
+/* --- Ficha de producto (variantes) --- */
+let pm={g:null,color:null,size:null,variant:null};
+function galleryImages(g){
+  const list=[];
+  g.variants.forEach(v=>{ if(v.foto)list.push(v.foto);
+    (v.fotos||'').split(/[,|]/).map(s=>s.trim()).filter(Boolean).forEach(u=>list.push(u)); });
+  if(!list.length)list.push(mainPhoto(g.base));
+  return [...new Set(list)];
+}
+function resolveVariant(g,color,size){
+  return g.variants.find(v=>(!g.colors.length||v.color===color)&&(!g.sizes.length||v.medida===size));
+}
+function openProduct(key){
+  const g=GROUPMAP[key]; if(!g)return;
+  pm={g,color:g.colors[0]||null,size:g.sizes[0]||null,variant:null};
+  const imgs=galleryImages(g);
+  $('#pmIcon').innerHTML=ICONS[g.cat]||ICONS.accesorios;
+  const mainImg=$('#pmMain');
+  mainImg.style.display='block'; mainImg.onerror=()=>{mainImg.style.display='none';};
+  mainImg.src=imgs[0];
+  $('#pmThumbs').innerHTML=imgs.length>1?imgs.map((u,i)=>`<img src="${u}" class="${i===0?'active':''}" data-u="${u}" onerror="this.remove()">`).join(''):'';
+  $('#pmThumbs').querySelectorAll('img').forEach(t=>t.onclick=()=>{$('#pmMain').src=t.dataset.u;
+    $('#pmThumbs img.active')&&$('#pmThumbs img.active').classList.remove('active');t.classList.add('active');});
+  $('#pmCat').textContent=catLabel(g.cat);
+  $('#pmName').textContent=g.name;
+  $('#pmBrand').textContent=g.brand;
+  $('#pmDesc').textContent=g.desc;
+  renderOpts();
+  $('#pModal').classList.add('open');$('#pOverlay').classList.add('open');
+}
+function renderOpts(){
+  const g=pm.g;
+  $('#pmColors').innerHTML=g.colors.length?('<span class="pm-lbl">Color</span><span class="pm-chips">'+
+    g.colors.map(c=>`<button class="opt${c===pm.color?' active':''}" data-color="${c}">${c}</button>`).join('')+'</span>'):'';
+  $('#pmSizes').innerHTML=g.sizes.length?('<span class="pm-lbl">Medida</span><span class="pm-chips">'+
+    g.sizes.map(s=>`<button class="opt${s===pm.size?' active':''}" data-size="${s}">${s}</button>`).join('')+'</span>'):'';
+  $('#pmColors').querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{pm.color=b.dataset.color;renderOpts();});
+  $('#pmSizes').querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{pm.size=b.dataset.size;renderOpts();});
+  const v=resolveVariant(g,pm.color,pm.size); pm.variant=v;
+  const add=$('#pmAdd');
+  if(v){
+    $('#pmPrice').innerHTML=money(v.price)+(v.price_old?`<small>${money(v.price_old)}</small>`:'');
+    if(v.foto){const mi=$('#pmMain');mi.style.display='block';mi.src=v.foto;}
+    add.disabled=!v.stock; add.textContent=v.stock?'Agregar al carrito':'Agotado';
+    $('#pmNote').textContent=v.stock?'':'Esta combinación está agotada.';
+  }else{
+    $('#pmPrice').textContent='—'; add.disabled=true; add.textContent='Elige una combinación';
+    $('#pmNote').textContent='Esa combinación no está disponible.';
+  }
+}
+function closeProduct(){$('#pModal').classList.remove('open');$('#pOverlay').classList.remove('open');}
 
 function addToCart(id){cart[id]=(cart[id]||0)+1;saveCart();updateCartUI();showToast('✓ '+PRODUCTS.find(x=>x.id===id).name+' agregado');}
 function setQty(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];saveCart();updateCartUI();}
@@ -623,8 +758,10 @@ function updateCartUI(){
   const ids=Object.keys(cart);
   if(!ids.length){$('#cartBody').innerHTML='<div class="cempty">Tu carrito está vacío.<br>Agrega productos del catálogo.</div>';$('#cartFoot').innerHTML='';return;}
   $('#cartBody').innerHTML=ids.map(id=>{const p=PRODUCTS.find(x=>x.id===id);if(!p)return '';
+    const vt=[p.color,p.medida].filter(Boolean).join(' · ');
     return `<div class="citem"><div class="cph">${ICONS[p.cat]||ICONS.accesorios}</div>
       <div class="cinfo"><div class="cbrand">${p.brand}</div><div class="cname">${p.name}</div>
+        ${vt?`<div class="cvar">${vt}</div>`:''}
         <div class="cprice">${money(p.price)} c/u · <b>${money(p.price*cart[id])}</b></div>
         <div class="qty"><button data-dec="${id}">−</button><span>${cart[id]}</span><button data-inc="${id}">+</button>
           <button class="rm" data-rm="${id}">Quitar</button></div></div></div>`;}).join('');
@@ -640,7 +777,9 @@ function updateCartUI(){
 function checkout(){
   const ids=Object.keys(cart);if(!ids.length)return;
   let msg='*Pedido — Black Machine Bike Shop*%0A%0A';
-  ids.forEach(id=>{const p=PRODUCTS.find(x=>x.id===id);if(!p)return;msg+=`• ${cart[id]}x [${p.brand}] ${p.name} — ${money(p.price*cart[id])}%0A`;});
+  ids.forEach(id=>{const p=PRODUCTS.find(x=>x.id===id);if(!p)return;
+    const vt=[p.color,p.medida].filter(Boolean).join(' / ');
+    msg+=`• ${cart[id]}x [${p.brand}] ${p.name}${vt?' ('+vt+')':''} — ${money(p.price*cart[id])}%0A`;});
   msg+=`%0A*Total: ${money(cartTotal())}*%0A%0AHola, quiero hacer este pedido. ¿Me confirman disponibilidad y forma de pago?`;
   window.open(`https://wa.me/${CFG.whatsapp}?text=${msg}`,'_blank');
 }
@@ -649,7 +788,9 @@ function checkout(){
 function openCart(){$('#drawer').classList.add('open');$('#overlay').classList.add('open');}
 function closeCart(){$('#drawer').classList.remove('open');$('#overlay').classList.remove('open');}
 $('#cartBtn').onclick=openCart;$('#closeCart').onclick=closeCart;$('#overlay').onclick=closeCart;
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCart();});
+$('#pClose').onclick=closeProduct;$('#pOverlay').onclick=closeProduct;
+$('#pmAdd').onclick=()=>{if(pm.variant&&pm.variant.stock){addToCart(pm.variant.id);closeProduct();openCart();}};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCart();closeProduct();}});
 let toastT;function showToast(txt){const t=$('#toast');t.textContent=txt;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800);}
 
 /* --- Catálogo desde Google Sheets --- */
@@ -687,7 +828,11 @@ function rowsToProducts(rows){
       price_old:oldRaw?parseFloat(oldRaw):undefined,
       tag:col(r,['etiqueta','tag'])||'',
       stock:!['no','false','0','agotado',''].includes(st) || st==='',
-      foto:col(r,['foto','imagen','image','url'])||''
+      foto:col(r,['foto','imagen','image','url'])||'',
+      grupo:col(r,['grupo','group']),
+      color:col(r,['color','colores']),
+      medida:col(r,['medida','talla','size','tamano','tamaño']),
+      fotos:col(r,['fotos','imagenes','imágenes','galeria','galería'])
     });
   }
   return out;
@@ -704,7 +849,7 @@ async function loadCatalog(){
     const res=await fetch(CFG.sheetCsvUrl,{cache:'no-store'});
     if(!res.ok)throw new Error(res.status);
     const prods=rowsToProducts(parseCSV((await res.text()).replace(/^﻿/,'')));
-    if(prods.length){ PRODUCTS=prods; rebuildFacets(); renderFilters(); renderGrid(); renderProdTeaser(); }
+    if(prods.length){ PRODUCTS=prods; rebuildFacets(); buildGroups(); renderFilters(); renderGrid(); renderProdTeaser(); }
   }catch(e){ console.warn('No se pudo cargar el catálogo desde Google Sheets:',e); }
 }
 
@@ -744,6 +889,7 @@ async function loadEvents(){
 
 /* --- Init --- */
 $('#search').oninput=renderGrid;$('#sort').onchange=renderGrid;
+buildGroups();
 renderEvents();renderAthletes();renderFilters();renderGrid();renderProdTeaser();updateCartUI();
 loadCatalog();loadEvents();
 </script>

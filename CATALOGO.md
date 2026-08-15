@@ -41,6 +41,35 @@ recargar** — sin tocar código ni volver a publicar.
 | `stock` | `si` = disponible, `no` = agotado. Vacío = disponible. | `si` |
 | `foto` | (Opcional) URL de imagen. Si se deja vacío, usa `assets/productos/<id>.jpg`. | |
 
+## Variantes (color y medida, con precio/stock propios)
+
+Un producto con variantes se arma con **una fila por variante**, todas con el
+**mismo `grupo`**. En la web se muestran como **un solo producto**; al abrirlo, el
+cliente elige color y medida, y cada combinación tiene su **propio precio y stock**.
+
+- `grupo`: cualquier texto que una las filas (ej. `g-punos-vans`). Vacío = producto
+  sin variantes.
+- `color` / `medida`: el valor de esa variante (ej. `Negro`, `145mm`). Puedes usar
+  solo color, solo medida, o ambos.
+- `precio` y `stock`: se definen **por fila** (variante).
+- `nombre`, `descripcion`, `marca`, `categoria`, `foto`: repítelos iguales en las
+  filas del grupo (se toman de la primera).
+
+Ejemplo (ya incluido en la plantilla):
+
+| id | grupo | nombre | precio | stock | color | medida |
+|----|-------|--------|--------|-------|-------|--------|
+| v001 | g-punos-vans | Puños Cult Vans | 349 | si | Negro | 145mm |
+| v002 | g-punos-vans | Puños Cult Vans | 349 | si | Rojo | 145mm |
+| v003 | g-punos-vans | Puños Cult Vans | 399 | no | Cromo | 160mm |
+
+## Varias fotos por producto
+
+- Columna `fotos`: varias URLs separadas por coma (además de `foto`, que es la
+  principal). Se muestran en la galería de la ficha.
+- O por nombre de archivo: `assets/productos/<id>.jpg`, `<id>-2.jpg`, etc.
+- Recomendado: 3–6 fotos, cuadradas (1:1).
+
 **Categorías válidas** (usa el valor de la izquierda en la columna `categoria`):
 `completas` · `cuadros` · `tijeras` · `manubrios` · `potencias` · `punos` ·
 `pedales` · `bielas` · `transmision` · `llantas` · `rines` · `frenos` ·
