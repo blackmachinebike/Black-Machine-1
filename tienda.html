@@ -702,9 +702,11 @@ function bindAdd(){
 let pm={g:null,color:null,size:null,variant:null};
 function galleryImages(g){
   const list=[];
-  g.variants.forEach(v=>{ if(v.foto)list.push(v.foto);
-    (v.fotos||'').split(/[,|]/).map(s=>s.trim()).filter(Boolean).forEach(u=>list.push(u)); });
-  if(!list.length)list.push(mainPhoto(g.base));
+  g.variants.forEach(v=>{
+    if(v.foto)list.push(v.foto);
+    (v.fotos||'').split(/[,|]/).map(s=>s.trim()).filter(Boolean).forEach(u=>list.push(u));
+    for(let n=1;n<=5;n++)list.push('assets/productos/'+v.id+(n===1?'':'-'+n)+'.jpg');
+  });
   return [...new Set(list)];
 }
 function resolveVariant(g,color,size){
