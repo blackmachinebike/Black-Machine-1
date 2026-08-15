@@ -153,11 +153,12 @@
   .prod::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .2s;z-index:3}
   .prod:hover{border-color:var(--accent);transform:translateY(-3px)}
   .prod:hover::before{transform:scaleX(1)}
-  .prod .ph{aspect-ratio:1/1;background:radial-gradient(circle at 50% 40%,#232733,#12151b);display:flex;align-items:center;justify-content:center;position:relative}
+  .prod .ph{aspect-ratio:1/1;background:radial-gradient(circle at 50% 40%,#232733,#12151b);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
   .prod .ph svg{width:70px;height:70px;opacity:.85}
-  .prod .tag{position:absolute;top:10px;left:10px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:4px 9px;border-radius:4px;text-transform:uppercase;letter-spacing:.6px}
+  .prod-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--panel2);z-index:1}
+  .prod .tag{position:absolute;top:10px;left:10px;z-index:2;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:4px 9px;border-radius:4px;text-transform:uppercase;letter-spacing:.6px}
   .prod .tag.out{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
-  .prod .brand{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:700;padding:4px 9px;border-radius:4px;text-transform:uppercase;letter-spacing:.8px}
+  .prod .brand{position:absolute;bottom:10px;right:10px;z-index:2;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:700;padding:4px 9px;border-radius:4px;text-transform:uppercase;letter-spacing:.8px}
   .prod .info{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
   .prod .cat{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-family:var(--mono)}
   .prod .name{font-weight:700;font-size:15px;line-height:1.25}
@@ -327,7 +328,13 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const CFG={ nombre:'Black Machine Bike Shop', whatsapp:'523325899142' };
+const CFG={
+  nombre:'Black Machine Bike Shop',
+  whatsapp:'523325899142',
+  // Pega aquí la URL CSV de tu Google Sheet publicado (Archivo → Compartir → Publicar en la web → CSV).
+  // Mientras esté vacío, la tienda usa el catálogo de respaldo de abajo.
+  sheetCsvUrl:''
+};
 const CART_KEY='bm_tienda_cart_v2';
 const money=n=>'$'+n.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0});
 const $=s=>document.querySelector(s);
@@ -440,8 +447,8 @@ const ATHLETES=[
 ];
 
 /* --- PRODUCTOS (precios de mercado MXN — ajústalos a tu inventario) --- */
-const BRANDS=['Cult','Demolition','Sunday','Kink','Summit','Odyssey','Éclat','Sando','Chepe'];
-const CATS=[
+let BRANDS=['Cult','Demolition','Sunday','Kink','Summit','Odyssey','Éclat','Sando','Chepe'];
+let CATS=[
   {id:'completas',label:'Bicis completas'},{id:'cuadros',label:'Cuadros'},{id:'tijeras',label:'Tijeras'},
   {id:'manubrios',label:'Manubrios'},{id:'potencias',label:'Potencias'},{id:'punos',label:'Puños'},
   {id:'pedales',label:'Pedales'},{id:'bielas',label:'Bielas'},{id:'transmision',label:'Sprocket / Cadena'},
@@ -449,7 +456,7 @@ const CATS=[
   {id:'asiento',label:'Asiento / Poste'},{id:'pegas',label:'Pegas'},{id:'accesorios',label:'Accesorios'}
 ];
 const catLabel=id=>(CATS.find(c=>c.id===id)||{}).label||'';
-const PRODUCTS=[
+let PRODUCTS=[
   {id:'p001',brand:'Sunday',cat:'completas',name:'Sunday Primer 20.5" 2024',desc:'Completa de acero cromoly, ideal para arrancar en street/park.',price:9800,tag:'Nuevo',stock:true},
   {id:'p002',brand:'Cult',cat:'completas',name:'Cult Access 20.5" 2024',desc:'Cromoly, llantas 2.4", lista para rodar de fábrica.',price:11900,tag:'Top',stock:true},
   {id:'p003',brand:'Kink',cat:'completas',name:'Kink Curb 20" 2024',desc:'Entrada sólida, hi-ten reforzado, freno trasero U.',price:7200,stock:true},
@@ -569,6 +576,7 @@ function cartTotal(){return Object.entries(cart).reduce((t,[id,q])=>{const p=PRO
 function prodCard(p){
   return `<div class="prod">
     <div class="ph">${ICONS[p.cat]||ICONS.accesorios}
+      <img class="prod-img" src="${p.foto||('assets/productos/'+p.id+'.jpg')}" alt="${p.name}" loading="lazy" onerror="this.remove()">
       ${p.tag?`<span class="tag${p.stock?'':' out'}">${p.stock?p.tag:'Agotado'}</span>`:(p.stock?'':'<span class="tag out">Agotado</span>')}
       <span class="brand">${p.brand}</span></div>
     <div class="info">
@@ -642,9 +650,66 @@ $('#cartBtn').onclick=openCart;$('#closeCart').onclick=closeCart;$('#overlay').o
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCart();});
 let toastT;function showToast(txt){const t=$('#toast');t.textContent=txt;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800);}
 
+/* --- Catálogo desde Google Sheets --- */
+function parseCSV(text){
+  const rows=[];let row=[],cur='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else { if(c==='"')q=true; else if(c===','){row.push(cur);cur='';}
+      else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur='';}
+      else if(c==='\r'){} else cur+=c; } }
+  if(cur!==''||row.length){row.push(cur);rows.push(row);}
+  return rows.filter(r=>r.some(x=>x.trim()!==''));
+}
+const norm=s=>(s||'').toString().trim().toLowerCase()
+  .normalize('NFD').replace(/[̀-ͯ]/g,'');
+function rowsToProducts(rows){
+  if(!rows.length)return[];
+  const head=rows[0].map(norm);
+  const idx=n=>head.indexOf(n);
+  const col=(r,names)=>{for(const n of names){const i=idx(n);if(i>=0)return (r[i]||'').trim();}return '';};
+  const out=[];
+  for(let i=1;i<rows.length;i++){const r=rows[i];
+    const name=col(r,['nombre','producto','name']); if(!name)continue;
+    const priceRaw=col(r,['precio','price']).replace(/[^0-9.]/g,'');
+    const oldRaw=col(r,['precio_anterior','precio anterior','antes','price_old']).replace(/[^0-9.]/g,'');
+    const st=norm(col(r,['stock','disponible','existencia']));
+    const cat=norm(col(r,['categoria','category']))||'accesorios';
+    out.push({
+      id:col(r,['id','sku'])||('sheet'+i),
+      brand:col(r,['marca','brand'])||'—',
+      cat,
+      name,
+      desc:col(r,['descripcion','descripción','desc'])||'',
+      price:parseFloat(priceRaw)||0,
+      price_old:oldRaw?parseFloat(oldRaw):undefined,
+      tag:col(r,['etiqueta','tag'])||'',
+      stock:!['no','false','0','agotado',''].includes(st) || st==='',
+      foto:col(r,['foto','imagen','image','url'])||''
+    });
+  }
+  return out;
+}
+function rebuildFacets(){
+  BRANDS=[...new Set(PRODUCTS.map(p=>p.brand).filter(b=>b&&b!=='—'))].sort((a,b)=>a.localeCompare(b));
+  const known=new Set(CATS.map(c=>c.id));
+  PRODUCTS.forEach(p=>{ if(p.cat&&!known.has(p.cat)){ known.add(p.cat);
+    CATS.push({id:p.cat,label:p.cat.charAt(0).toUpperCase()+p.cat.slice(1)}); }});
+}
+async function loadCatalog(){
+  if(!CFG.sheetCsvUrl)return;
+  try{
+    const res=await fetch(CFG.sheetCsvUrl,{cache:'no-store'});
+    if(!res.ok)throw new Error(res.status);
+    const prods=rowsToProducts(parseCSV(await res.text()));
+    if(prods.length){ PRODUCTS=prods; rebuildFacets(); renderFilters(); renderGrid(); renderProdTeaser(); }
+  }catch(e){ console.warn('No se pudo cargar el catálogo desde Google Sheets:',e); }
+}
+
 /* --- Init --- */
 $('#search').oninput=renderGrid;$('#sort').onchange=renderGrid;
 renderEvents();renderAthletes();renderFilters();renderGrid();renderProdTeaser();updateCartUI();
+loadCatalog();
 </script>
 </body>
 </html>
