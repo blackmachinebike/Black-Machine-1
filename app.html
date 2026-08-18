@@ -17,6 +17,7 @@
     --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
     --txt:#e8eaf0; --muted:#9aa3b2; --accent:#e11d2a; --accent2:#f5a623;
     --green:#22c55e; --blue:#3b82f6; --amber:#f59e0b;
+    --ease-out:cubic-bezier(0.23,1,0.32,1);
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
@@ -26,7 +27,7 @@
   header small{color:var(--muted);display:block;font-weight:400}
   .wrap{max-width:1100px;margin:0 auto;padding:20px}
   .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-  .tabs button{background:var(--panel);color:var(--muted);border:1px solid var(--line);padding:10px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+  .tabs button{background:var(--panel);color:var(--muted);border:1px solid var(--line);padding:10px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;transition:background .15s ease,color .15s ease,border-color .15s ease}
   .tabs button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
@@ -44,14 +45,15 @@
   .items-table th,.items-table td{border:1px solid var(--line);padding:6px;font-size:13px;text-align:left}
   .items-table th{background:var(--panel2);color:var(--muted)}
   .items-table input{padding:6px}
-  .btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px}
+  .btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;transition:transform .12s var(--ease-out),filter .12s var(--ease-out)}
+  .btn:active{transform:scale(.97)}
   .btn.sec{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
   .btn.sm{padding:6px 10px;font-size:12px}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
   .toolbar input,.toolbar select{width:auto;flex:1;min-width:140px}
   .note-list{display:flex;flex-direction:column;gap:10px}
-  .note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;cursor:pointer;transition:border-color .15s ease,transform .15s var(--ease-out)}
   .note .meta{font-size:13px;color:var(--muted)}
   .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase}
   .badge.venta{background:rgba(34,197,94,.15);color:var(--green)}
@@ -66,12 +68,16 @@
   .total-line{text-align:right;font-size:18px;font-weight:800;margin-top:10px}
   .hidden{display:none!important}
   .empty{text-align:center;color:var(--muted);padding:30px}
-  dialog{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:12px;max-width:760px;width:94%;padding:0}
-  dialog::backdrop{background:rgba(0,0,0,.6)}
+  dialog{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:12px;max-width:760px;width:94%;padding:0;opacity:0;transform:scale(.96);transition:opacity .2s var(--ease-out),transform .2s var(--ease-out),overlay .2s var(--ease-out) allow-discrete,display .2s var(--ease-out) allow-discrete}
+  dialog[open]{opacity:1;transform:scale(1)}
+  @starting-style{dialog[open]{opacity:0;transform:scale(.96)}}
+  dialog::backdrop{background:rgba(0,0,0,0);transition:background .2s var(--ease-out),overlay .2s var(--ease-out) allow-discrete,display .2s var(--ease-out) allow-discrete}
+  dialog[open]::backdrop{background:rgba(0,0,0,.6)}
+  @starting-style{dialog[open]::backdrop{background:rgba(0,0,0,0)}}
   .dlg-body{padding:18px}
   .dlg-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;padding:0 18px 18px}
   #ask{max-width:400px}
-  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;border:1px solid var(--line);padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:100}
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;border:1px solid var(--line);padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s var(--ease-out),transform .25s var(--ease-out);z-index:100}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   /* ---- Login ---- */
   #auth{position:fixed;inset:0;background:linear-gradient(160deg,#0a0a0a,#1a1a1a);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
@@ -106,6 +112,20 @@
   .receipt .r-sign{margin-top:34px;text-align:center;flex:1}
   .receipt .r-sign .line{border-top:1px solid #1a1a1a;padding-top:5px}
   #printArea{display:none}
+  /* Feedback de hover solo con puntero fino (el táctil dispara hovers falsos al tocar) */
+  @media (hover:hover) and (pointer:fine){
+    .btn:hover{filter:brightness(1.08)}
+    .tabs button:hover:not(.active){color:var(--txt);border-color:var(--muted)}
+    .note:hover{border-color:var(--accent);transform:translateY(-1px)}
+  }
+  /* Menos movimiento: se conservan los fundidos, se quitan los desplazamientos/escalados */
+  @media (prefers-reduced-motion:reduce){
+    dialog,dialog[open]{transform:none}
+    @starting-style{dialog[open]{transform:none}}
+    .btn:active{transform:none}
+    .note:hover{transform:none}
+    #toast,#toast.show{transform:translateX(-50%)}
+  }
   @media print{
     @page{margin:14mm}
     body{background:#fff;color:#000}
