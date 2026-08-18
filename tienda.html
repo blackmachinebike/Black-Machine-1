@@ -6,6 +6,7 @@
 <title>Black Machine Bike Shop</title>
 <meta name="description" content="Black Machine Bike Shop. No vendemos bicicletas, construimos cultura sobre ruedas. Eventos, atletas y tienda BMX. Zapopan, Jalisco.">
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
   :root{
     /* Máquina: negro-acero frío + cromado. El rojo de carrera es la marca. */
     --bg:#0a0c0f; --panel:#12151b; --panel2:#171b22; --line:#262c36;
@@ -14,6 +15,7 @@
     --green:#22c55e; --blue:#3b82f6;
     --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --display:'Anton','Arial Narrow',system-ui,sans-serif;
     /* chapa metálica sutil para superficies grandes */
     --plate:linear-gradient(160deg,#161a21,#0d1015);
   }
@@ -23,6 +25,12 @@
   a{color:inherit;text-decoration:none}
   ::selection{background:var(--accent);color:#fff}
   :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+  html{caret-color:var(--accent);scrollbar-color:#2b3340 var(--bg)}
+  ::-webkit-scrollbar{width:12px;height:12px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:#2b3340;border:3px solid var(--bg);border-radius:8px}
+  ::-webkit-scrollbar-thumb:hover{background:#3a4150}
+  .prod .price,.pm-price,#count,.ev .meta,.cprice,.hero-overlay .kicker{font-variant-numeric:tabular-nums}
   /* Divisor: cadena de rodillos (elemento insignia) */
   .chain{height:20px;margin:8px auto;max-width:1200px;
     background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='20'><g fill='none' stroke='%23262c36' stroke-width='2'><rect x='2' y='4' width='20' height='12' rx='6'/><rect x='26' y='4' width='20' height='12' rx='6'/></g><g fill='%233a4150'><circle cx='12' cy='10' r='3'/><circle cx='36' cy='10' r='3'/></g></svg>") repeat-x center;
@@ -53,23 +61,21 @@
   .section-head{max-width:1200px;margin:44px auto 20px;padding:0 20px}
   .section-head .eyebrow{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);font-family:var(--mono);display:inline-flex;align-items:center;gap:8px}
   .section-head .eyebrow::before{content:"";width:22px;height:1px;background:var(--accent)}
-  .section-head h2{margin:8px 0 6px;font-size:32px;font-weight:800;letter-spacing:-.5px;text-transform:uppercase}
+  .section-head h2{margin:8px 0 6px;font-family:var(--display);font-size:40px;font-weight:400;letter-spacing:.5px;text-transform:uppercase;line-height:1}
   .section-head p{margin:0;color:var(--muted);max-width:640px;line-height:1.55}
   /* Hero urbano (foto a pantalla) */
   .hero-full{position:relative;min-height:76vh;display:flex;align-items:flex-end;overflow:hidden;border-bottom:2px solid var(--accent)}
   .hero-photo{position:absolute;inset:0;background:#0a0c0f center/cover no-repeat;
     /* Para foto real: reemplaza el background-image por url('assets/hero.jpg') */
     background-image:radial-gradient(120% 130% at 72% 8%,#252a35 0%,#12151b 42%,#0a0c0f 78%);}
-  .hero-photo::before{content:"";position:absolute;top:-20%;left:38%;width:60%;height:150%;transform:skewX(-14deg);
-    background:linear-gradient(90deg,transparent,rgba(225,29,42,.16));border-left:3px solid rgba(225,29,42,.5);pointer-events:none}
+  .hero-photo::before{content:"";position:absolute;top:-20%;left:40%;width:62%;height:150%;transform:skewX(-14deg);
+    background:linear-gradient(90deg,transparent 0%,rgba(225,29,42,.05) 76%,rgba(225,29,42,.34) 100%);pointer-events:none}
   .hero-ghost{position:absolute;right:-3%;bottom:-6%;width:min(66vw,780px);opacity:.09;pointer-events:none}
   .hero-ghost svg{width:100%;height:auto;display:block}
-  .hero-grain{position:absolute;inset:0;pointer-events:none;opacity:.42;mix-blend-mode:overlay;
-    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
   .hero-overlay{position:relative;z-index:2;width:100%;max-width:1200px;margin:0 auto;padding:0 20px 52px}
   .hero-overlay .kicker{font-family:var(--mono);text-transform:uppercase;letter-spacing:3px;font-size:12px;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:10px}
   .hero-overlay .kicker::before{content:"";width:34px;height:2px;background:var(--accent)}
-  .hero-overlay h2{margin:12px 0 22px;font-size:clamp(56px,13vw,150px);line-height:.86;font-weight:800;text-transform:uppercase;letter-spacing:-3px;text-shadow:0 8px 40px rgba(0,0,0,.5)}
+  .hero-overlay h2{margin:12px 0 22px;font-family:var(--display);font-size:clamp(64px,14vw,168px);line-height:.9;font-weight:400;text-transform:uppercase;letter-spacing:0;text-shadow:0 8px 40px rgba(0,0,0,.5)}
   .hero-actions{display:flex;gap:10px;flex-wrap:wrap}
   .btn{background:var(--accent);color:#fff;border:none;padding:13px 24px;border-radius:8px;cursor:pointer;font-weight:800;font-size:14px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px}
   .btn.ghost{background:rgba(10,12,15,.4);border:1px solid var(--line);color:var(--txt);backdrop-filter:blur(4px)}
@@ -100,7 +106,7 @@
   .val .vv{color:var(--muted);font-size:12.5px;line-height:1.4}
   /* Home teasers */
   .teaser-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:44px auto 16px;max-width:1200px;padding:0 20px}
-  .teaser-head h3{margin:0;font-size:23px;font-weight:800;text-transform:uppercase;letter-spacing:-.4px}
+  .teaser-head h3{margin:0;font-family:var(--display);font-size:30px;font-weight:400;text-transform:uppercase;letter-spacing:.5px;line-height:1}
   .teaser-head .more{color:var(--accent);font-weight:700;font-size:12px;cursor:pointer;background:none;border:none;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px}
   .teaser-head .more:hover{text-decoration:underline}
   /* Eventos */
@@ -108,7 +114,7 @@
   .ev{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
   .ev:hover{border-color:var(--accent);transform:translateY(-3px)}
   .ev .cover{height:148px;background:radial-gradient(120% 140% at 75% 10%,#20242e,#0d1014);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
-  .ev .cover::after{content:"";position:absolute;top:-20%;left:52%;width:60%;height:150%;transform:skewX(-14deg);background:linear-gradient(90deg,transparent,rgba(225,29,42,.14));border-left:2px solid rgba(225,29,42,.5)}
+  .ev .cover::after{content:"";position:absolute;top:-20%;left:54%;width:60%;height:150%;transform:skewX(-14deg);background:linear-gradient(90deg,transparent 0%,rgba(225,29,42,.05) 74%,rgba(225,29,42,.3) 100%)}
   .ev .cover .disc{font-size:44px;font-weight:900;letter-spacing:-1px;color:rgba(255,255,255,.06);text-transform:uppercase}
   .ev .cover svg{position:absolute;width:60px;height:60px;opacity:.9}
   .ev .kind{position:absolute;top:12px;left:12px;z-index:2;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 10px;border-radius:4px;font-family:var(--mono)}
@@ -242,7 +248,12 @@
   @media(max-width:900px){.values-inner{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:600px){.hero-box h2{font-size:26px}.hero-box{padding:24px}nav button{padding:8px 9px;font-size:13px}header h1{font-size:15px}}
   @media(max-width:520px){.values-inner{grid-template-columns:1fr}}
-  @media(max-width:640px){.hero-box h2{font-size:34px}}
+  @media(max-width:640px){.hero-box h2{font-size:34px}
+    header .spacer{display:none}
+    .brand{flex:1;min-width:0}
+    .cart-btn{order:1}
+    nav{order:2;width:100%;flex-wrap:wrap}
+    .hero-full{min-height:62vh}}
   @media(prefers-reduced-motion:reduce){.hero-cog{animation:none}*{scroll-behavior:auto!important}}
 </style>
 </head>
@@ -271,7 +282,7 @@
 <!-- ============ INICIO ============ -->
 <div class="view active" id="view-inicio">
   <section class="hero-full">
-    <div class="hero-photo" id="heroPhoto"><span class="hero-ghost" id="heroGhost"></span><span class="hero-grain"></span></div>
+    <div class="hero-photo" id="heroPhoto"><span class="hero-ghost" id="heroGhost"></span></div>
     <div class="hero-overlay">
       <span class="kicker">Zapopan, Jal. — BMX · MTB · Street</span>
       <h2>Equípate</h2>
@@ -361,7 +372,7 @@
 <div class="pmodal" id="pModal" role="dialog" aria-label="Producto">
   <button class="x pm-x" id="pClose" aria-label="Cerrar">×</button>
   <div class="pm-media">
-    <div class="pm-frame"><span class="pm-iconbg" id="pmIcon"></span><img id="pmMain" class="pm-main" alt=""></div>
+    <div class="pm-frame"><span class="pm-iconbg" id="pmIcon"></span><img id="pmMain" class="pm-main" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E"></div>
     <div class="pm-thumbs" id="pmThumbs"></div>
   </div>
   <div class="pm-body">
