@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Black Machine Bike Shop — Próximamente</title>
+<meta name="description" content="Black Machine Bike Shop. Nuestro nuevo sitio está en construcción. Mientras tanto, escríbenos por WhatsApp.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+  :root{
+    --bg:#0a0c0f; --panel:#12151b; --line:#262c36; --txt:#eceef2; --muted:#8b93a2;
+    --chrome:#c3c9d4; --accent:#e11d2a;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --display:'Anton','Arial Narrow',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;font-family:var(--sans);background:var(--bg);color:var(--txt);
+    background-image:radial-gradient(1100px 520px at 78% -120px,rgba(225,29,42,.10),transparent 60%);
+    display:flex;flex-direction:column}
+  ::selection{background:var(--accent);color:#fff}
+  a{color:inherit;text-decoration:none}
+  .top{border-bottom:1px solid var(--line);box-shadow:0 1px 0 var(--accent);padding:14px 22px;background:linear-gradient(90deg,#000,#141414)}
+  .top .logo{height:44px;width:auto;display:block}
+  .wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 22px;position:relative;overflow:hidden}
+  .ghost{position:absolute;right:-4%;bottom:-8%;width:min(60vw,620px);opacity:.06;pointer-events:none}
+  .ghost svg{width:100%;height:auto;display:block}
+  .card{position:relative;z-index:1;max-width:640px;width:100%}
+  .eyebrow{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);display:inline-flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:32px;height:2px;background:var(--accent)}
+  h1{font-family:var(--display);font-weight:400;text-transform:uppercase;letter-spacing:.5px;line-height:.95;
+    font-size:clamp(48px,10vw,104px);margin:16px 0 14px}
+  p.lead{color:var(--muted);font-size:17px;line-height:1.6;max-width:520px;margin:0 0 28px}
+  .actions{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{background:var(--accent);color:#fff;border:none;padding:14px 24px;border-radius:9px;cursor:pointer;
+    font-weight:800;font-size:14px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;display:inline-flex;align-items:center;gap:9px}
+  .btn.ghostbtn{background:transparent;border:1px solid var(--line);color:var(--txt)}
+  .btn.ghostbtn:hover{border-color:var(--accent)}
+  .meta{margin-top:34px;padding-top:22px;border-top:1px solid var(--line);display:flex;gap:30px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:12.5px;color:var(--muted);letter-spacing:.4px}
+  .meta b{color:var(--chrome);font-weight:700;display:block;margin-bottom:4px;letter-spacing:1px}
+  .meta a:hover{color:var(--accent)}
+  footer{padding:16px 22px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;background:#0b0d11}
+  @media(max-width:520px){.meta{gap:20px}}
+</style>
+</head>
+<body>
+  <header class="top"><img class="logo" id="logo" src="assets/logo.svg" alt="Black Machine Bike Shop"></header>
+
+  <main class="wrap">
+    <span class="ghost" id="ghost"></span>
+    <div class="card">
+      <span class="eyebrow">Zapopan, Jal.</span>
+      <h1>Estamos<br>afinando la<br><span style="color:var(--accent)">máquina</span></h1>
+      <p class="lead">Nuestro nuevo sitio está en construcción. Muy pronto vas a poder ver la tienda, los eventos y a nuestros riders aquí mismo. Mientras tanto, escríbenos y te atendemos directo.</p>
+      <div class="actions">
+        <a class="btn" id="wa" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>
+        <a class="btn ghostbtn" id="maps" target="_blank" rel="noopener">Cómo llegar</a>
+      </div>
+      <div class="meta">
+        <div><b>Tienda</b>Av. Tesistán 704A, San José del Bajío,<br>Zapopan, Jalisco. CP 45140</div>
+        <div><b>Horario</b>Lun–Sáb · 10:00–19:00</div>
+        <div><b>WhatsApp</b><a id="waText">33 2589 9142</a></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>Black Machine Bike Shop — Cultura sobre ruedas</footer>
+
+<script>
+  const WA='523325899142', DIR='Av. Tesistán 704A, San José del Bajío, Zapopan, Jalisco, 45140';
+  document.getElementById('wa').href='https://wa.me/'+WA+'?text='+encodeURIComponent('Hola Black Machine, tengo una pregunta.');
+  document.getElementById('waText').href='https://wa.me/'+WA;
+  document.getElementById('maps').href='https://maps.google.com/?q='+encodeURIComponent(DIR);
+  // Logo con respaldo a texto si el SVG no existe
+  const lg=document.getElementById('logo');
+  lg.onerror=()=>{lg.outerHTML='<span style="font-weight:800;font-size:20px">Black Machine <span style="color:var(--accent)">Bike Shop</span></span>';};
+  // Bici fantasma (line-art)
+  document.getElementById('ghost').innerHTML=`<svg viewBox="0 0 420 250" fill="none" stroke="#c3c9d4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="95" cy="180" r="60"/><circle cx="325" cy="180" r="60"/>
+    <circle cx="95" cy="180" r="7" fill="#c3c9d4"/><circle cx="325" cy="180" r="7" fill="#c3c9d4"/>
+    <circle cx="200" cy="180" r="11"/>
+    <path d="M200 180 95 180M200 180 250 110M95 180 250 110M250 110 268 118M200 180 268 118M268 118 325 180"/>
+    <path d="M250 110 241 90M223 90 259 90"/><path d="M268 118 262 86 302 78"/><path d="M200 180 228 150"/>
+  </svg>`;
+</script>
+</body>
+</html>
