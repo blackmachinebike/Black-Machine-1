@@ -251,6 +251,12 @@
         <option value="apartado">Apartado</option>
         <option value="taller">Taller</option>
       </select>
+      <select id="ordenar">
+        <option value="fecha_desc">Más recientes primero</option>
+        <option value="fecha_asc">Más antiguas primero</option>
+        <option value="monto_asc">Monto: menor a mayor</option>
+        <option value="monto_desc">Monto: mayor a menor</option>
+      </select>
       <button class="btn sec" id="exportar">Exportar CSV</button>
     </div>
     <div class="note-list" id="listaNotas"></div>
@@ -645,11 +651,20 @@ function renderLista(){
     const hay=(n.cliente+' '+n.folio+' '+n.items.map(i=>i.desc).join(' ')).toLowerCase();
     return hay.includes(q);
   });
+  const orden=document.getElementById('ordenar').value;
+  const fkey=n=>(n.fecha||'')+(n.creada||'');
+  filtered.sort((a,b)=>{
+    if(orden==='fecha_asc')return fkey(a)<fkey(b)?-1:1;
+    if(orden==='monto_asc')return (a.total||0)-(b.total||0);
+    if(orden==='monto_desc')return (b.total||0)-(a.total||0);
+    return fkey(a)>fkey(b)?-1:1; // fecha_desc (por defecto)
+  });
   el.innerHTML=filtered.map(noteHTML).join('')||'<div class="empty">Sin resultados.</div>';
   bindNoteClicks(el);
 }
 document.getElementById('buscar').oninput=renderLista;
 document.getElementById('filtroTipo').onchange=renderLista;
+document.getElementById('ordenar').onchange=renderLista;
 
 // ---- Clientes (historial) ----
 function refreshClienteList(){
