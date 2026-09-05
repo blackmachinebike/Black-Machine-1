@@ -417,6 +417,14 @@ document.getElementById('btnConfig').onclick=async()=>{
 const money=n=>'$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const activas=()=>notas.filter(n=>!n.borrada);
+// Fecha con día de la semana: "lunes, 15 de agosto de 2026"
+function fechaLarga(f){
+  if(!f)return '';
+  const [y,m,d]=String(f).slice(0,10).split('-').map(Number);
+  if(!y||!m||!d)return f;
+  const t=new Date(y,m-1,d).toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  return t.charAt(0).toUpperCase()+t.slice(1);
+}
 let notas=[];
 let clientes=[];
 let editandoId=null;
@@ -775,7 +783,7 @@ function noteHTML(n){
     <div>
       <div><span class="badge ${n.tipo}">${n.tipo}</span> <strong>${n.folio}</strong> ${estBadge}</div>
       <div class="meta">${n.cliente}${n.bici?' · '+n.bici:''}</div>
-      <div class="meta">${n.fecha}</div>
+      <div class="meta">${fechaLarga(n.fecha)}</div>
     </div>
     ${amt}
   </div>`;
@@ -794,7 +802,7 @@ function abrirDetalle(id){
   const infoBlocks=`
     <div><b>Cliente</b>${n.cliente||'—'}${contactoCli?'<br>'+contactoCli:''}</div>
     ${biciTxt?`<div><b>Bicicleta</b>${biciTxt}</div>`:''}
-    <div style="text-align:right"><b>Fecha</b>${n.fecha}${n.pago?'<br><b>Pago</b>'+n.pago:''}</div>`;
+    <div style="text-align:right"><b>Fecha</b>${fechaLarga(n.fecha)}${n.pago?'<br><b>Pago</b>'+n.pago:''}</div>`;
   const mostrarSaldo=(n.tipo==='apartado')||(n.tipo==='taller'&&(+n.anticipo>0));
   const totales=`
     <div class="r-totals">
@@ -817,7 +825,7 @@ function abrirDetalle(id){
       <div class="r-doc">
         <div class="r-type">${tipoLabel[n.tipo]}</div>
         <div class="r-folio">${n.folio}</div>
-        <div class="r-date">${n.fecha}</div>
+        <div class="r-date">${fechaLarga(n.fecha)}</div>
       </div>
     </div>
     <div class="r-info">${infoBlocks}</div>
@@ -928,7 +936,7 @@ function renderPapelera(){
   el.innerHTML=list.map(n=>`<div class="note">
     <div>
       <div><span class="badge ${n.tipo}">${n.tipo}</span> <strong>${n.folio}</strong></div>
-      <div class="meta">${n.cliente||''} · ${n.fecha||''} · ${money(n.total)}</div>
+      <div class="meta">${n.cliente||''} · ${fechaLarga(n.fecha)} · ${money(n.total)}</div>
     </div>
     <div class="row" style="margin:0">
       <button class="btn sec sm" data-rest="${n.id}">Restaurar</button>
