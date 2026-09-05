@@ -891,13 +891,22 @@ async function boot(){
   else{document.getElementById('auth').classList.remove('hidden');}
 }
 const doLogin=async()=>{
-  const email=document.getElementById('authEmail').value.trim();
+  const email=document.getElementById('authEmail').value.trim().toLowerCase();
   const pass=document.getElementById('authPass').value;
   const err=document.getElementById('authErr');err.textContent='';
   const btn=document.getElementById('authBtn');btn.disabled=true;
-  const {error}=await sb.auth.signInWithPassword({email,password:pass});
+  let error;
+  try{({error}=await sb.auth.signInWithPassword({email,password:pass}));}
+  catch(e){error=e;}
   btn.disabled=false;
-  if(error){err.textContent='Correo o contraseña incorrectos.';return;}
+  if(error){
+    const m=(error.message||'').toLowerCase();
+    if(m.includes('invalid login'))err.textContent='Correo o contraseña incorrectos.';
+    else if(m.includes('not confirmed'))err.textContent='La cuenta no está confirmada. Actívala en Supabase (Auto Confirm User).';
+    else if(m.includes('failed to fetch')||m.includes('network'))err.textContent='Sin conexión. Revisa tu internet e intenta de nuevo.';
+    else err.textContent='No se pudo entrar: '+error.message;
+    return;
+  }
   await startApp();
 };
 document.getElementById('authBtn').onclick=doLogin;
