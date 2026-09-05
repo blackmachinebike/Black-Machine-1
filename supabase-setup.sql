@@ -20,10 +20,13 @@ create table if not exists public.notas (
   diag      text,
   estado    text,
   items     jsonb default '[]'::jsonb,
+  subtotal  numeric default 0,
+  descuento numeric default 0,
   total     numeric default 0,
   anticipo  numeric default 0,
   saldo     numeric default 0,
   obs       text,
+  borrada   boolean default false,
   creada    timestamptz default now()
 );
 

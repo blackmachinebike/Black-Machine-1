@@ -148,6 +148,8 @@
     <button data-view="nueva">Nueva nota</button>
     <button data-view="lista">Notas registradas</button>
     <button data-view="clientes">Clientes</button>
+    <button data-view="reportes">Reportes</button>
+    <button data-view="papelera">Papelera</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -223,6 +225,12 @@
         <div><label>Anticipo / Abono</label><input type="number" id="fAnticipo" value="0" min="0" step="0.01"></div>
       </div>
 
+      <div class="row" style="justify-content:flex-end;gap:8px;align-items:flex-end;margin-top:8px">
+        <div style="max-width:150px"><label>Descuento</label><input type="number" id="fDescuento" value="0" min="0" step="0.01"></div>
+        <div style="max-width:90px"><label>Tipo</label><select id="fDescTipo"><option value="monto">$</option><option value="porcentaje">%</option></select></div>
+      </div>
+      <div class="total-line" style="font-weight:400;font-size:15px">Subtotal: <span id="subtotalPreview">$0.00</span></div>
+      <div id="descLine" class="total-line hidden" style="font-weight:400;font-size:15px;color:var(--accent2)">Descuento: <span id="descPreview">$0.00</span></div>
       <div class="total-line">Total: <span id="totalPreview">$0.00</span></div>
       <div id="saldoLine" class="total-line hidden">Saldo pendiente: <span id="saldoPreview">$0.00</span></div>
 
@@ -241,6 +249,25 @@
       <input id="buscarCli" placeholder="Buscar cliente por nombre o WhatsApp...">
     </div>
     <div class="note-list" id="listaClientes"></div>
+  </div>
+
+  <!-- REPORTES -->
+  <div id="view-reportes" class="hidden">
+    <div class="panel">
+      <h2>Reporte por periodo</h2>
+      <div class="row" style="margin-top:0;align-items:flex-end">
+        <div><label>Desde</label><input type="date" id="rDesde" style="width:auto"></div>
+        <div><label>Hasta</label><input type="date" id="rHasta" style="width:auto"></div>
+        <button class="btn sm" id="rPDF" style="background:#0a7">Exportar PDF</button>
+      </div>
+      <div id="reporteContenido" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <!-- PAPELERA -->
+  <div id="view-papelera" class="hidden">
+    <p class="muted" style="margin-top:0">Notas movidas a la papelera. Puedes restaurarlas o eliminarlas definitivamente.</p>
+    <div class="note-list" id="listaPapelera"></div>
   </div>
 
   <!-- LISTA -->
@@ -389,6 +416,7 @@ document.getElementById('btnConfig').onclick=async()=>{
 };
 const money=n=>'$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const activas=()=>notas.filter(n=>!n.borrada);
 let notas=[];
 let clientes=[];
 let editandoId=null;
@@ -453,10 +481,12 @@ const DB={
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
-  ['dashboard','nueva','lista','clientes'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==b.dataset.view));
+  ['dashboard','nueva','lista','clientes','reportes','papelera'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==b.dataset.view));
   if(b.dataset.view==='dashboard')renderDashboard();
   if(b.dataset.view==='lista')renderLista();
   if(b.dataset.view==='clientes')renderClientes();
+  if(b.dataset.view==='reportes')renderReportes();
+  if(b.dataset.view==='papelera')renderPapelera();
 });
 
 // ---- Formulario ----
@@ -468,8 +498,11 @@ document.getElementById('fPago').innerHTML=PAGOS.map(p=>`<option>${p}</option>`)
 (function(){
   const hoy=new Date();
   const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  document.getElementById('cDesde').value=iso(new Date(hoy.getFullYear(),hoy.getMonth(),1));
-  document.getElementById('cHasta').value=iso(hoy);
+  const ini=iso(new Date(hoy.getFullYear(),hoy.getMonth(),1)),fin=iso(hoy);
+  document.getElementById('cDesde').value=ini;
+  document.getElementById('cHasta').value=fin;
+  document.getElementById('rDesde').value=ini;
+  document.getElementById('rHasta').value=fin;
 })();
 document.getElementById('cDesde').onchange=renderCorte;
 document.getElementById('cHasta').onchange=renderCorte;
@@ -488,20 +521,32 @@ function addItemRow(desc='',cant=1,precio=''){
 }
 document.getElementById('addItem').onclick=()=>addItemRow();
 
+function calcDescuento(subtotal){
+  const dv=+document.getElementById('fDescuento').value||0;
+  let desc=document.getElementById('fDescTipo').value==='porcentaje'?subtotal*dv/100:dv;
+  return Math.min(Math.max(desc,0),subtotal);
+}
 function recalc(){
-  let total=0;
+  let subtotal=0;
   itemsBody.querySelectorAll('tr').forEach(tr=>{
     const c=+tr.querySelector('.i-cant').value||0;
     const p=+tr.querySelector('.i-precio').value||0;
-    const imp=c*p; total+=imp;
+    const imp=c*p; subtotal+=imp;
     tr.querySelector('.i-importe').textContent=money(imp);
   });
+  const desc=calcDescuento(subtotal);
+  const total=subtotal-desc;
+  document.getElementById('subtotalPreview').textContent=money(subtotal);
+  document.getElementById('descPreview').textContent=money(desc);
+  document.getElementById('descLine').classList.toggle('hidden',desc<=0);
   document.getElementById('totalPreview').textContent=money(total);
   const ant=+document.getElementById('fAnticipo').value||0;
   document.getElementById('saldoPreview').textContent=money(total-ant);
-  return total;
+  return {subtotal,desc,total};
 }
 document.getElementById('fAnticipo').oninput=recalc;
+document.getElementById('fDescuento').oninput=recalc;
+document.getElementById('fDescTipo').onchange=recalc;
 
 fTipo.onchange=()=>{
   const t=fTipo.value;
@@ -522,6 +567,8 @@ function limpiar(){
   document.getElementById('fDiag').value='';
   document.getElementById('fObs').value='';
   document.getElementById('fAnticipo').value=0;
+  document.getElementById('fDescuento').value=0;
+  document.getElementById('fDescTipo').value='monto';
   document.getElementById('fEstado').value='proceso';
   itemsBody.innerHTML='';addItemRow();
   editandoId=null;
@@ -544,6 +591,8 @@ function cargarEnFormulario(n){
   document.getElementById('fDiag').value=n.diag||'';
   document.getElementById('fEstado').value=n.estado||'proceso';
   document.getElementById('fAnticipo').value=n.anticipo||0;
+  document.getElementById('fDescuento').value=n.descuento||0;
+  document.getElementById('fDescTipo').value='monto';
   document.getElementById('fObs').value=n.obs||'';
   itemsBody.innerHTML='';
   (n.items&&n.items.length?n.items:[{desc:'',cant:1,precio:''}]).forEach(i=>addItemRow(i.desc,i.cant,i.precio));
@@ -562,7 +611,9 @@ document.getElementById('guardar').onclick=async()=>{
   if(!document.getElementById('fCliente').value.trim()){toast('Ingresa el nombre del cliente.');return;}
   if(!items.length){toast('Agrega al menos un concepto.');return;}
   const tipo=fTipo.value;
-  const total=items.reduce((s,i)=>s+i.cant*i.precio,0);
+  const subtotal=items.reduce((s,i)=>s+i.cant*i.precio,0);
+  const descuento=calcDescuento(subtotal);
+  const total=subtotal-descuento;
   const anticipo=(tipo==='apartado'||tipo==='taller')?(+document.getElementById('fAnticipo').value||0):0;
   const editing=editandoId?notas.find(x=>x.id===editandoId):null;
   const nota={
@@ -579,9 +630,10 @@ document.getElementById('guardar').onclick=async()=>{
     detalles:document.getElementById('fDetalles').value.trim(),
     diag:document.getElementById('fDiag').value.trim(),
     estado:document.getElementById('fEstado').value,
-    items,total,anticipo,
+    items,subtotal,descuento,total,anticipo,
     saldo:total-anticipo,
     obs:document.getElementById('fObs').value.trim(),
+    borrada:editing?(editing.borrada||false):false,
     creada:editing?editing.creada:new Date().toISOString()
   };
   const btn=document.getElementById('guardar');btn.disabled=true;
@@ -614,20 +666,21 @@ function folio(tipo){
 
 // ---- Dashboard ----
 function renderDashboard(){
-  document.getElementById('stTotal').textContent=notas.length;
-  const ventas=notas.filter(n=>n.tipo==='venta').reduce((s,n)=>s+n.total,0);
+  const A=activas();
+  document.getElementById('stTotal').textContent=A.length;
+  const ventas=A.filter(n=>n.tipo==='venta').reduce((s,n)=>s+n.total,0);
   const ahora=new Date();
   const mesActual=ahora.getFullYear()+'-'+String(ahora.getMonth()+1).padStart(2,'0');
-  const ventasMes=notas.filter(n=>n.tipo==='venta'&&(n.fecha||'').slice(0,7)===mesActual).reduce((s,n)=>s+n.total,0);
+  const ventasMes=A.filter(n=>n.tipo==='venta'&&(n.fecha||'').slice(0,7)===mesActual).reduce((s,n)=>s+n.total,0);
   document.getElementById('stVentasMes').textContent=money(ventasMes);
   document.getElementById('stMesNombre').textContent=ahora.toLocaleDateString('es-MX',{month:'long',year:'numeric'}).toUpperCase();
-  const saldoAp=notas.filter(n=>n.tipo==='apartado').reduce((s,n)=>s+n.saldo,0);
-  const tallerP=notas.filter(n=>n.tipo==='taller'&&n.estado==='proceso').length;
+  const saldoAp=A.filter(n=>n.tipo==='apartado').reduce((s,n)=>s+n.saldo,0);
+  const tallerP=A.filter(n=>n.tipo==='taller'&&n.estado==='proceso').length;
   document.getElementById('stVentas').textContent=money(ventas);
   document.getElementById('stApartados').textContent=money(saldoAp);
   document.getElementById('stTaller').textContent=tallerP;
   const r=document.getElementById('recientes');
-  r.innerHTML=notas.slice(0,5).map(noteHTML).join('')||'<div class="empty">Aún no hay notas registradas.</div>';
+  r.innerHTML=A.slice(0,5).map(noteHTML).join('')||'<div class="empty">Aún no hay notas registradas.</div>';
   bindNoteClicks(r);
   renderCorte();
 }
@@ -636,7 +689,7 @@ function renderDashboard(){
 const cobrado=n=>n.tipo==='venta'?(+n.total||0):(+n.anticipo||0);
 function renderCorte(){
   const d=document.getElementById('cDesde').value,h=document.getElementById('cHasta').value;
-  const sel=notas.filter(n=>{const f=(n.fecha||'').slice(0,10);return (!d||f>=d)&&(!h||f<=h);});
+  const sel=activas().filter(n=>{const f=(n.fecha||'').slice(0,10);return (!d||f>=d)&&(!h||f<=h);});
   document.getElementById('cTotal').textContent=money(sel.reduce((s,n)=>s+cobrado(n),0));
   const porPago={};PAGOS.forEach(p=>porPago[p]=0);
   sel.forEach(n=>{const p=PAGOS.includes(n.pago)?n.pago:'Efectivo';porPago[p]+=cobrado(n);});
@@ -649,7 +702,7 @@ function renderLista(){
   const q=document.getElementById('buscar').value.toLowerCase();
   const ft=document.getElementById('filtroTipo').value;
   const el=document.getElementById('listaNotas');
-  const filtered=notas.filter(n=>{
+  const filtered=activas().filter(n=>{
     if(ft&&n.tipo!==ft)return false;
     const hay=(n.cliente+' '+n.folio+' '+n.items.map(i=>i.desc).join(' ')).toLowerCase();
     return hay.includes(q);
@@ -680,7 +733,7 @@ function renderClientes(){
   const list=clientes.filter(c=>((c.nombre||'')+' '+(c.whatsapp||'')).toLowerCase().includes(q))
     .sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
   el.innerHTML=list.map(c=>{
-    const nn=notas.filter(n=>digits(n.wa)===c.id).length;
+    const nn=activas().filter(n=>digits(n.wa)===c.id).length;
     return `<div class="note" data-cli="${(c.nombre||'').replace(/"/g,'&quot;')}">
       <div>
         <div><strong>${c.nombre||'—'}</strong></div>
@@ -745,6 +798,8 @@ function abrirDetalle(id){
   const mostrarSaldo=(n.tipo==='apartado')||(n.tipo==='taller'&&(+n.anticipo>0));
   const totales=`
     <div class="r-totals">
+      ${(+n.descuento>0)?`<div><span>Subtotal</span><span>${money(n.subtotal!=null?n.subtotal:n.total+ +n.descuento)}</span></div>
+      <div><span>Descuento</span><span>- ${money(n.descuento)}</span></div>`:''}
       <div><span>Total</span><span>${money(n.total)}</span></div>
       ${mostrarSaldo?`<div><span>Anticipo / abonos</span><span>${money(n.anticipo)}</span></div>
       <div class="r-saldo"><span>Saldo pendiente</span><span>${money(n.saldo)}</span></div>`:''}
@@ -782,7 +837,7 @@ function abrirDetalle(id){
     ${n.tipo==='cotizacion'?'<button class="btn sm" id="convertir" style="background:#0a7">Convertir a venta</button>':''}
     <button class="btn sec sm" id="editar">Editar</button>
     <button class="btn sec sm" id="imprimir">Imprimir / PDF</button>
-    <button class="btn sec sm" id="borrar">Eliminar</button>
+    <button class="btn sec sm" id="borrar">Mover a papelera</button>
     <button class="btn sec sm" onclick="document.getElementById('dlg').close()">Cerrar</button>`;
   document.getElementById('dlg').showModal();
   document.getElementById('imprimir').onclick=()=>{
@@ -857,19 +912,93 @@ function abrirDetalle(id){
     toast('Cotización cargada como venta');
   };
   document.getElementById('borrar').onclick=async()=>{
-    if(await confirmModal('¿Eliminar la nota '+n.folio+'? Esta acción no se puede deshacer.')){
-      try{await DB.remove(id);}catch(e){toast('Error: '+e.message);return;}
-      document.getElementById('dlg').close();refresh();toast('Nota eliminada.');
+    if(await confirmModal('¿Mover la nota '+n.folio+' a la papelera? Podrás restaurarla después.')){
+      n.borrada=true;
+      const idx=notas.findIndex(x=>x.id===n.id);if(idx>=0)notas[idx]=n;
+      try{await DB.update(n);}catch(e){toast('Error: '+e.message);return;}
+      document.getElementById('dlg').close();refresh();toast('Nota movida a la papelera.');
     }
   };
 }
 
-function refresh(){renderDashboard();renderLista();}
+// ---- Papelera ----
+function renderPapelera(){
+  const el=document.getElementById('listaPapelera');
+  const list=notas.filter(n=>n.borrada);
+  el.innerHTML=list.map(n=>`<div class="note">
+    <div>
+      <div><span class="badge ${n.tipo}">${n.tipo}</span> <strong>${n.folio}</strong></div>
+      <div class="meta">${n.cliente||''} · ${n.fecha||''} · ${money(n.total)}</div>
+    </div>
+    <div class="row" style="margin:0">
+      <button class="btn sec sm" data-rest="${n.id}">Restaurar</button>
+      <button class="btn sec sm" data-del="${n.id}" style="color:#ef4444">Eliminar definitivo</button>
+    </div>
+  </div>`).join('')||'<div class="empty">La papelera está vacía.</div>';
+  el.querySelectorAll('[data-rest]').forEach(x=>x.onclick=async()=>{
+    const n=notas.find(y=>y.id===x.dataset.rest);if(!n)return;
+    n.borrada=false;const idx=notas.findIndex(y=>y.id===n.id);if(idx>=0)notas[idx]=n;
+    try{await DB.update(n);}catch(e){toast('Error: '+e.message);return;}
+    refresh();toast('Nota restaurada.');
+  });
+  el.querySelectorAll('[data-del]').forEach(x=>x.onclick=async()=>{
+    const id=x.dataset.del,n=notas.find(y=>y.id===id);
+    if(await confirmModal('¿Eliminar definitivamente '+(n?n.folio:'')+'? Esta acción NO se puede deshacer.')){
+      try{await DB.remove(id);}catch(e){toast('Error: '+e.message);return;}
+      refresh();toast('Nota eliminada definitivamente.');
+    }
+  });
+}
+
+// ---- Reportes ----
+function calcReporte(desde,hasta){
+  const A=activas().filter(n=>{const f=(n.fecha||'').slice(0,10);return (!desde||f>=desde)&&(!hasta||f<=hasta);});
+  const porPago={};PAGOS.forEach(p=>porPago[p]=0);
+  const tipos={venta:{c:0,m:0},apartado:{c:0,m:0},taller:{c:0,m:0},cotizacion:{c:0,m:0}};
+  let totalCobrado=0;
+  A.forEach(n=>{const m=cobrado(n);totalCobrado+=m;porPago[PAGOS.includes(n.pago)?n.pago:'Efectivo']+=m;
+    if(!tipos[n.tipo])tipos[n.tipo]={c:0,m:0};tipos[n.tipo].c++;tipos[n.tipo].m+=m;});
+  return {A,porPago,tipos,totalCobrado};
+}
+function reporteInner(){
+  const d=document.getElementById('rDesde').value,h=document.getElementById('rHasta').value;
+  const {A,porPago,tipos,totalCobrado}=calcReporte(d,h);
+  const lbl={venta:'Ventas',apartado:'Apartados',taller:'Taller',cotizacion:'Cotizaciones'};
+  const cardsTipo=['venta','apartado','taller','cotizacion'].map(t=>`<div class="card"><div class="k">${lbl[t]}</div><div class="v" style="font-size:18px">${money(tipos[t].m)}</div><div class="k">${tipos[t].c} nota(s)</div></div>`).join('');
+  const cardsPago=PAGOS.map(p=>`<div class="card"><div class="k">${p}</div><div class="v" style="font-size:18px">${money(porPago[p])}</div></div>`).join('');
+  return `<div class="total-line" style="font-size:22px">Total cobrado: ${money(totalCobrado)}</div>
+    <div class="k" style="margin:16px 0 6px">Por tipo de nota</div><div class="cards">${cardsTipo}</div>
+    <div class="k" style="margin:16px 0 6px">Por método de pago</div><div class="cards">${cardsPago}</div>
+    <div class="muted" style="margin-top:10px">${A.length} nota(s) en el periodo</div>`;
+}
+function renderReportes(){document.getElementById('reporteContenido').innerHTML=reporteInner();}
+document.getElementById('rDesde').onchange=renderReportes;
+document.getElementById('rHasta').onchange=renderReportes;
+document.getElementById('rPDF').onclick=async()=>{
+  if(!window.jspdf||!window.html2canvas){toast('Cargando… intenta de nuevo en un momento.');return;}
+  toast('Generando PDF…');
+  const d=document.getElementById('rDesde').value,h=document.getElementById('rHasta').value;
+  try{
+    const holder=document.createElement('div');holder.className='receipt';
+    holder.style.cssText='position:fixed;left:-9999px;top:0;width:720px;background:#fff';
+    holder.innerHTML=`<div class="r-head"><div class="r-brand">${logoMark('#1a1a1a','#fff',48)}<div><div class="r-name">BLACK MACHINE<br>BIKE SHOP</div><div class="r-sub">Reporte del ${d} al ${h}</div></div></div><div class="r-doc"><div class="r-type">Reporte</div></div></div>`+reporteInner();
+    document.body.appendChild(holder);
+    const canvas=await html2canvas(holder,{scale:2,backgroundColor:'#ffffff'});
+    document.body.removeChild(holder);
+    const {jsPDF}=window.jspdf;const pdf=new jsPDF('p','mm','a4');
+    const w=210,hh=canvas.height*w/canvas.width;pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,w,hh);
+    const file=new File([pdf.output('blob')],`reporte_${d}_${h}.pdf`,{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file],title:'Reporte Black Machine'});
+    else pdf.save(file.name);
+  }catch(e){if(e.name!=='AbortError')toast('No se pudo generar el PDF: '+e.message);}
+};
+
+function refresh(){renderDashboard();renderLista();renderPapelera();}
 
 // ---- Exportar CSV ----
 document.getElementById('exportar').onclick=()=>{
-  const head=['Folio','Tipo','Fecha','Cliente','WhatsApp','Domicilio','MetodoPago','Bicicleta','Rodado','Detalles','Total','Anticipo','Saldo','Estado','Conceptos'];
-  const rows=notas.map(n=>[n.folio,n.tipo,n.fecha,n.cliente,n.wa||'',n.domicilio||'',n.pago||'',n.bici||'',n.rodado||'',n.detalles||'',n.total,n.anticipo,n.saldo,n.estado,
+  const head=['Folio','Tipo','Fecha','Cliente','WhatsApp','Domicilio','MetodoPago','Bicicleta','Rodado','Detalles','Subtotal','Descuento','Total','Anticipo','Saldo','Estado','Conceptos'];
+  const rows=activas().map(n=>[n.folio,n.tipo,n.fecha,n.cliente,n.wa||'',n.domicilio||'',n.pago||'',n.bici||'',n.rodado||'',n.detalles||'',n.subtotal!=null?n.subtotal:n.total,n.descuento||0,n.total,n.anticipo,n.saldo,n.estado,
     n.items.map(i=>`${i.cant}x ${i.desc} (${i.precio})`).join(' | ')]
     .map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(','));
   const csv=[head.join(','),...rows].join('\n');
