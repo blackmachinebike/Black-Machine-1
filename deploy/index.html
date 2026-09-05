@@ -968,18 +968,25 @@ function calcReporte(desde,hasta){
     if(!tipos[n.tipo])tipos[n.tipo]={c:0,m:0};tipos[n.tipo].c++;tipos[n.tipo].m+=m;});
   return {A,porPago,tipos,totalCobrado};
 }
-function reporteInner(){
+function reporteInner(light){
   const d=document.getElementById('rDesde').value,h=document.getElementById('rHasta').value;
   const {A,porPago,tipos,totalCobrado}=calcReporte(d,h);
   const lbl={venta:'Ventas',apartado:'Apartados',taller:'Taller',cotizacion:'Cotizaciones'};
-  const cardsTipo=['venta','apartado','taller','cotizacion'].map(t=>`<div class="card"><div class="k">${lbl[t]}</div><div class="v" style="font-size:18px">${money(tipos[t].m)}</div><div class="k">${tipos[t].c} nota(s)</div></div>`).join('');
-  const cardsPago=PAGOS.map(p=>`<div class="card"><div class="k">${p}</div><div class="v" style="font-size:18px">${money(porPago[p])}</div></div>`).join('');
-  return `<div class="total-line" style="font-size:22px">Total cobrado: ${money(totalCobrado)}</div>
-    <div class="k" style="margin:16px 0 6px">Por tipo de nota</div><div class="cards">${cardsTipo}</div>
-    <div class="k" style="margin:16px 0 6px">Por método de pago</div><div class="cards">${cardsPago}</div>
-    <div class="muted" style="margin-top:10px">${A.length} nota(s) en el periodo</div>`;
+  const tile=(k,v,sub)=>light
+    ? `<div style="border:1px solid #ddd;border-radius:8px;padding:10px 12px;background:#fff"><div style="color:#666;font-size:10px;text-transform:uppercase;letter-spacing:.5px">${k}</div><div style="font-size:17px;font-weight:800;color:#1a1a1a">${v}</div>${sub?`<div style="color:#888;font-size:11px">${sub}</div>`:''}</div>`
+    : `<div class="card"><div class="k">${k}</div><div class="v" style="font-size:18px">${v}</div>${sub?`<div class="k">${sub}</div>`:''}</div>`;
+  const grid=light?'style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px"':'class="cards"';
+  const cardsTipo=['venta','apartado','taller','cotizacion'].map(t=>tile(lbl[t],money(tipos[t].m),tipos[t].c+' nota(s)')).join('');
+  const cardsPago=PAGOS.map(p=>tile(p,money(porPago[p]))).join('');
+  const hcol=light?'color:#666':'';
+  const total=light?`<div style="font-size:22px;font-weight:800;color:#1a1a1a">Total cobrado: ${money(totalCobrado)}</div>`
+    :`<div class="total-line" style="font-size:22px;text-align:left">Total cobrado: ${money(totalCobrado)}</div>`;
+  return `${total}
+    <div style="margin:16px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;${hcol}">Por tipo de nota</div><div ${grid}>${cardsTipo}</div>
+    <div style="margin:16px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;${hcol}">Por método de pago</div><div ${grid}>${cardsPago}</div>
+    <div style="margin-top:10px;color:${light?'#888':'var(--muted)'};font-size:12px">${A.length} nota(s) en el periodo</div>`;
 }
-function renderReportes(){document.getElementById('reporteContenido').innerHTML=reporteInner();}
+function renderReportes(){document.getElementById('reporteContenido').innerHTML=reporteInner(false);}
 document.getElementById('rDesde').onchange=renderReportes;
 document.getElementById('rHasta').onchange=renderReportes;
 document.getElementById('rPDF').onclick=async()=>{
@@ -989,7 +996,7 @@ document.getElementById('rPDF').onclick=async()=>{
   try{
     const holder=document.createElement('div');holder.className='receipt';
     holder.style.cssText='position:fixed;left:-9999px;top:0;width:720px;background:#fff';
-    holder.innerHTML=`<div class="r-head"><div class="r-brand">${logoMark('#1a1a1a','#fff',48)}<div><div class="r-name">BLACK MACHINE<br>BIKE SHOP</div><div class="r-sub">Reporte del ${d} al ${h}</div></div></div><div class="r-doc"><div class="r-type">Reporte</div></div></div>`+reporteInner();
+    holder.innerHTML=`<div class="r-head"><div class="r-brand">${logoMark('#1a1a1a','#fff',48)}<div><div class="r-name">BLACK MACHINE<br>BIKE SHOP</div><div class="r-sub">Reporte del ${d} al ${h}</div></div></div><div class="r-doc"><div class="r-type">Reporte</div></div></div>`+reporteInner(true);
     document.body.appendChild(holder);
     const canvas=await html2canvas(holder,{scale:2,backgroundColor:'#ffffff'});
     document.body.removeChild(holder);
