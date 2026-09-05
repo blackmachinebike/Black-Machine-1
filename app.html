@@ -58,6 +58,7 @@
   .badge.apartado{background:rgba(245,158,11,.15);color:var(--amber)}
   .badge.taller{background:rgba(59,130,246,.15);color:var(--blue)}
   .badge.cotizacion{background:rgba(154,163,178,.18);color:var(--muted)}
+  .badge.egreso{background:rgba(225,29,42,.15);color:var(--accent)}
   .badge.pagado{background:rgba(34,197,94,.15);color:var(--green)}
   .badge.pendiente{background:rgba(245,158,11,.15);color:var(--amber)}
   .badge.entregado{background:rgba(34,197,94,.15);color:var(--green)}
@@ -148,6 +149,7 @@
     <button data-view="nueva">Nueva nota</button>
     <button data-view="lista">Notas registradas</button>
     <button data-view="clientes">Clientes</button>
+    <button data-view="proveedores">Proveedores</button>
     <button data-view="reportes">Reportes</button>
     <button data-view="papelera">Papelera</button>
   </div>
@@ -167,8 +169,10 @@
         <div><label>Desde</label><input type="date" id="cDesde" style="width:auto"></div>
         <div><label>Hasta</label><input type="date" id="cHasta" style="width:auto"></div>
       </div>
-      <div class="total-line">Total cobrado: <span id="cTotal">$0.00</span></div>
+      <div class="total-line">Ingresos: <span id="cTotal">$0.00</span></div>
       <div id="cDesglose" class="cards" style="margin-top:10px"></div>
+      <div class="total-line" style="font-size:15px;font-weight:600;color:var(--accent)">Egresos (proveedores): <span id="cEgresos">$0.00</span></div>
+      <div class="total-line" style="border-top:1px solid var(--line);padding-top:8px">Balance: <span id="cBalance">$0.00</span></div>
     </div>
     <div class="panel">
       <h2>Últimas notas</h2>
@@ -188,12 +192,13 @@
             <option value="apartado">Apartado</option>
             <option value="taller">Taller</option>
             <option value="cotizacion">Cotización</option>
+            <option value="egreso">Egreso / Proveedor</option>
           </select>
         </div>
         <div><label>Fecha</label><input type="date" id="fFecha"></div>
-        <div><label>Cliente</label><input id="fCliente" class="up" list="clienteList" placeholder="Nombre del cliente"><datalist id="clienteList"></datalist></div>
-        <div><label>WhatsApp del cliente</label><input id="fWa" placeholder="Opcional"></div>
-        <div><label>Domicilio del cliente</label><input id="fDomicilio" class="up" placeholder="Opcional"></div>
+        <div><label id="lblCliente">Cliente</label><input id="fCliente" class="up" list="clienteList" placeholder="Nombre del cliente"><datalist id="clienteList"></datalist></div>
+        <div id="divWa"><label>WhatsApp del cliente</label><input id="fWa" placeholder="Opcional"></div>
+        <div id="divDom"><label>Domicilio del cliente</label><input id="fDomicilio" class="up" placeholder="Opcional"></div>
         <div><label>Método de pago</label>
           <select id="fPago"></select>
         </div>
@@ -262,6 +267,20 @@
       </div>
       <div id="reporteContenido" style="margin-top:14px"></div>
     </div>
+  </div>
+
+  <!-- PROVEEDORES / EGRESOS -->
+  <div id="view-proveedores" class="hidden">
+    <div class="cards">
+      <div class="card"><div class="k">Por pagar a proveedores</div><div class="v" id="stPorPagar" style="color:var(--accent)">$0</div></div>
+      <div class="card"><div class="k">Pagado a proveedores</div><div class="v" id="stPagadoProv">$0</div></div>
+      <div class="card"><div class="k">Registros</div><div class="v" id="stEgresos">0</div></div>
+    </div>
+    <div class="toolbar">
+      <input id="buscarProv" placeholder="Buscar proveedor o concepto...">
+      <button class="btn" id="btnNuevoEgreso">+ Nuevo egreso</button>
+    </div>
+    <div class="note-list" id="listaProveedores"></div>
   </div>
 
   <!-- PAPELERA -->
@@ -417,6 +436,9 @@ document.getElementById('btnConfig').onclick=async()=>{
 const money=n=>'$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const activas=()=>notas.filter(n=>!n.borrada);
+const esEgreso=n=>n.tipo==='egreso';
+const ingresos=()=>activas().filter(n=>!esEgreso(n));   // ventas/apartados/taller/cotizaciones
+const egresos=()=>activas().filter(esEgreso);            // pagos a proveedores
 // Fecha con día de la semana: "lunes, 15 de agosto de 2026"
 function fechaLarga(f){
   if(!f)return '';
@@ -489,10 +511,11 @@ const DB={
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
-  ['dashboard','nueva','lista','clientes','reportes','papelera'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==b.dataset.view));
+  ['dashboard','nueva','lista','clientes','proveedores','reportes','papelera'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==b.dataset.view));
   if(b.dataset.view==='dashboard')renderDashboard();
   if(b.dataset.view==='lista')renderLista();
   if(b.dataset.view==='clientes')renderClientes();
+  if(b.dataset.view==='proveedores')renderProveedores();
   if(b.dataset.view==='reportes')renderReportes();
   if(b.dataset.view==='papelera')renderPapelera();
 });
@@ -558,10 +581,16 @@ document.getElementById('fDescTipo').onchange=recalc;
 
 fTipo.onchange=()=>{
   const t=fTipo.value;
-  const conAbono=(t==='apartado'||t==='taller');
+  const esEg=t==='egreso';
+  const conAbono=(t==='apartado'||t==='taller'||esEg);
   document.getElementById('grpTaller').classList.toggle('hidden',t!=='taller');
   document.getElementById('grpApartado').classList.toggle('hidden',!conAbono);
   document.getElementById('saldoLine').classList.toggle('hidden',!conAbono);
+  document.getElementById('lblCliente').textContent=esEg?'Proveedor':'Cliente';
+  document.getElementById('fCliente').placeholder=esEg?'Nombre del proveedor':'Nombre del cliente';
+  document.getElementById('divWa').classList.toggle('hidden',esEg);
+  document.getElementById('divDom').classList.toggle('hidden',esEg);
+  document.getElementById('saldoLine').firstChild.textContent=esEg?'Saldo por pagar: ':'Saldo pendiente: ';
 };
 
 function limpiar(){
@@ -622,7 +651,7 @@ document.getElementById('guardar').onclick=async()=>{
   const subtotal=items.reduce((s,i)=>s+i.cant*i.precio,0);
   const descuento=calcDescuento(subtotal);
   const total=subtotal-descuento;
-  const anticipo=(tipo==='apartado'||tipo==='taller')?(+document.getElementById('fAnticipo').value||0):0;
+  const anticipo=(tipo==='apartado'||tipo==='taller'||tipo==='egreso')?(+document.getElementById('fAnticipo').value||0):0;
   const editing=editandoId?notas.find(x=>x.id===editandoId):null;
   const nota={
     id:editing?editing.id:uid(),
@@ -661,20 +690,20 @@ document.getElementById('guardar').onclick=async()=>{
     }
     toast('Nota '+nota.folio+(editing?' actualizada.':' guardada.'));
     limpiar();
-    document.querySelector('.tabs button[data-view="lista"]').click();
+    document.querySelector('.tabs button[data-view="'+(nota.tipo==='egreso'?'proveedores':'lista')+'"]').click();
   }catch(e){toast('Error al guardar: '+e.message);}
   btn.disabled=false;
 };
 
 function folio(tipo){
-  const pref={venta:'V',apartado:'A',taller:'T',cotizacion:'C'}[tipo];
+  const pref={venta:'V',apartado:'A',taller:'T',cotizacion:'C',egreso:'E'}[tipo];
   const n=notas.filter(x=>x.tipo===tipo).length+1;
   return pref+String(n).padStart(4,'0');
 }
 
 // ---- Dashboard ----
 function renderDashboard(){
-  const A=activas();
+  const A=ingresos();
   document.getElementById('stTotal').textContent=A.length;
   const ventas=A.filter(n=>n.tipo==='venta').reduce((s,n)=>s+n.total,0);
   const ahora=new Date();
@@ -697,12 +726,17 @@ function renderDashboard(){
 const cobrado=n=>n.tipo==='venta'?(+n.total||0):(+n.anticipo||0);
 function renderCorte(){
   const d=document.getElementById('cDesde').value,h=document.getElementById('cHasta').value;
-  const sel=activas().filter(n=>{const f=(n.fecha||'').slice(0,10);return (!d||f>=d)&&(!h||f<=h);});
-  document.getElementById('cTotal').textContent=money(sel.reduce((s,n)=>s+cobrado(n),0));
+  const enRango=n=>{const f=(n.fecha||'').slice(0,10);return (!d||f>=d)&&(!h||f<=h);};
+  const sel=ingresos().filter(enRango);
+  const totalIng=sel.reduce((s,n)=>s+cobrado(n),0);
+  document.getElementById('cTotal').textContent=money(totalIng);
   const porPago={};PAGOS.forEach(p=>porPago[p]=0);
   sel.forEach(n=>{const p=PAGOS.includes(n.pago)?n.pago:'Efectivo';porPago[p]+=cobrado(n);});
   document.getElementById('cDesglose').innerHTML=PAGOS
     .map(p=>`<div class="card"><div class="k">${p}</div><div class="v" style="font-size:18px">${money(porPago[p])}</div></div>`).join('');
+  const totalEg=egresos().filter(enRango).reduce((s,n)=>s+(+n.anticipo||0),0);
+  document.getElementById('cEgresos').textContent='- '+money(totalEg);
+  document.getElementById('cBalance').textContent=money(totalIng-totalEg);
 }
 
 // ---- Lista ----
@@ -710,7 +744,7 @@ function renderLista(){
   const q=document.getElementById('buscar').value.toLowerCase();
   const ft=document.getElementById('filtroTipo').value;
   const el=document.getElementById('listaNotas');
-  const filtered=activas().filter(n=>{
+  const filtered=ingresos().filter(n=>{
     if(ft&&n.tipo!==ft)return false;
     const hay=(n.cliente+' '+n.folio+' '+n.items.map(i=>i.desc).join(' ')).toLowerCase();
     return hay.includes(q);
@@ -777,7 +811,7 @@ document.getElementById('fWa').addEventListener('change',autofillCliente);
 function noteHTML(n){
   const estado=n.tipo==='apartado'?(n.saldo<=0?'pagado':'pendiente'):(n.tipo==='taller'?n.estado:'');
   const estBadge=estado?`<span class="badge ${estado}">${estado==='proceso'?'en proceso':estado}</span>`:'';
-  const conSaldo=(n.tipo==='apartado')||(n.tipo==='taller'&&(+n.anticipo>0));
+  const conSaldo=(n.tipo==='apartado')||(n.tipo==='egreso')||(n.tipo==='taller'&&(+n.anticipo>0));
   const amt=conSaldo?`<div class="amt">${money(n.saldo)}<div class="muted" style="font-size:11px">saldo de ${money(n.total)}</div></div>`:`<div class="amt">${money(n.total)}</div>`;
   return `<div class="note" data-id="${n.id}">
     <div>
@@ -793,17 +827,17 @@ function bindNoteClicks(container){
   container.querySelectorAll('.note').forEach(el=>el.onclick=()=>abrirDetalle(el.dataset.id));
 }
 
-const tipoLabel={venta:'Nota de venta',apartado:'Nota de apartado',taller:'Nota de taller',cotizacion:'Cotización'};
+const tipoLabel={venta:'Nota de venta',apartado:'Nota de apartado',taller:'Nota de taller',cotizacion:'Cotización',egreso:'Pago a proveedor'};
 function abrirDetalle(id){
   const n=notas.find(x=>x.id===id);if(!n)return;
   const rows=n.items.map(i=>`<tr><td>${i.desc}</td><td class="num">${i.cant}</td><td class="num">${money(i.precio)}</td><td class="num">${money(i.cant*i.precio)}</td></tr>`).join('');
   const contactoCli=[n.wa?'WhatsApp: '+n.wa:'',n.domicilio?'Dom: '+n.domicilio:''].filter(Boolean).join('<br>');
   const biciTxt=[n.bici,n.rodado?'R'+n.rodado:''].filter(Boolean).join(' · ');
   const infoBlocks=`
-    <div><b>Cliente</b>${n.cliente||'—'}${contactoCli?'<br>'+contactoCli:''}</div>
+    <div><b>${n.tipo==='egreso'?'Proveedor':'Cliente'}</b>${n.cliente||'—'}${contactoCli?'<br>'+contactoCli:''}</div>
     ${biciTxt?`<div><b>Bicicleta</b>${biciTxt}</div>`:''}
     <div style="text-align:right"><b>Fecha</b>${fechaLarga(n.fecha)}${n.pago?'<br><b>Pago</b>'+n.pago:''}</div>`;
-  const mostrarSaldo=(n.tipo==='apartado')||(n.tipo==='taller'&&(+n.anticipo>0));
+  const mostrarSaldo=(n.tipo==='apartado')||(n.tipo==='egreso')||(n.tipo==='taller'&&(+n.anticipo>0));
   const totales=`
     <div class="r-totals">
       ${(+n.descuento>0)?`<div><span>Subtotal</span><span>${money(n.subtotal!=null?n.subtotal:n.total+ +n.descuento)}</span></div>
@@ -838,7 +872,7 @@ function abrirDetalle(id){
       <div class="r-sign"><div class="line">${n.tipo==='cotizacion'?'Atendió':'Firma / recibí conforme'}</div></div>
     </div>`;
   document.getElementById('dlgActions').innerHTML=`
-    ${(n.tipo==='apartado'||n.tipo==='taller')&&n.saldo>0?'<button class="btn sm" id="abonar">Registrar abono</button>':''}
+    ${(n.tipo==='apartado'||n.tipo==='taller'||n.tipo==='egreso')&&n.saldo>0?'<button class="btn sm" id="abonar">'+(n.tipo==='egreso'?'Registrar pago':'Registrar abono')+'</button>':''}
     ${n.tipo==='taller'&&n.estado==='proceso'?'<button class="btn sm" id="entregar">Marcar entregado</button>':''}
     ${n.wa?`<button class="btn sm" id="waCli" style="background:#25D366">WhatsApp cliente</button>`:''}
     <button class="btn sm" id="compartir" style="background:#0a7">Compartir / Enviar</button>
@@ -958,19 +992,51 @@ function renderPapelera(){
   });
 }
 
+// ---- Proveedores / Egresos ----
+function renderProveedores(){
+  const q=(document.getElementById('buscarProv').value||'').toLowerCase();
+  const eg=egresos();
+  const porPagar=eg.reduce((s,n)=>s+(+n.saldo||0),0);
+  const pagado=eg.reduce((s,n)=>s+(+n.anticipo||0),0);
+  document.getElementById('stPorPagar').textContent=money(porPagar);
+  document.getElementById('stPagadoProv').textContent=money(pagado);
+  document.getElementById('stEgresos').textContent=eg.length;
+  const list=eg.filter(n=>((n.cliente||'')+' '+(n.items||[]).map(i=>i.desc).join(' ')).toLowerCase().includes(q))
+    .sort((a,b)=>((b.fecha||'')+(b.creada||'')>(a.fecha||'')+(a.creada||''))?1:-1);
+  const el=document.getElementById('listaProveedores');
+  el.innerHTML=list.map(n=>`<div class="note" data-id="${n.id}">
+    <div>
+      <div><span class="badge egreso">egreso</span> <strong>${n.folio}</strong> ${n.saldo>0?'<span class="badge pendiente">por pagar</span>':'<span class="badge pagado">pagado</span>'}</div>
+      <div class="meta">${n.cliente||'—'}</div>
+      <div class="meta">${fechaLarga(n.fecha)}</div>
+    </div>
+    <div class="amt">${money(n.saldo)}<div class="muted" style="font-size:11px">de ${money(n.total)}</div></div>
+  </div>`).join('')||'<div class="empty">Sin egresos registrados. Usa "+ Nuevo egreso".</div>';
+  el.querySelectorAll('.note').forEach(x=>x.onclick=()=>abrirDetalle(x.dataset.id));
+}
+document.getElementById('buscarProv').oninput=renderProveedores;
+document.getElementById('btnNuevoEgreso').onclick=()=>{
+  document.querySelector('.tabs button[data-view="nueva"]').click();
+  limpiar();
+  document.getElementById('fTipo').value='egreso';fTipo.onchange();
+};
+
 // ---- Reportes ----
 function calcReporte(desde,hasta){
-  const A=activas().filter(n=>{const f=(n.fecha||'').slice(0,10);return (!desde||f>=desde)&&(!hasta||f<=hasta);});
+  const inR=n=>{const f=(n.fecha||'').slice(0,10);return (!desde||f>=desde)&&(!hasta||f<=hasta);};
+  const A=ingresos().filter(inR);
   const porPago={};PAGOS.forEach(p=>porPago[p]=0);
   const tipos={venta:{c:0,m:0},apartado:{c:0,m:0},taller:{c:0,m:0},cotizacion:{c:0,m:0}};
   let totalCobrado=0;
   A.forEach(n=>{const m=cobrado(n);totalCobrado+=m;porPago[PAGOS.includes(n.pago)?n.pago:'Efectivo']+=m;
     if(!tipos[n.tipo])tipos[n.tipo]={c:0,m:0};tipos[n.tipo].c++;tipos[n.tipo].m+=m;});
-  return {A,porPago,tipos,totalCobrado};
+  const eg=egresos().filter(inR);
+  const totalEgresos=eg.reduce((s,n)=>s+(+n.anticipo||0),0);
+  return {A,porPago,tipos,totalCobrado,totalEgresos,egCount:eg.length,balance:totalCobrado-totalEgresos};
 }
 function reporteInner(light){
   const d=document.getElementById('rDesde').value,h=document.getElementById('rHasta').value;
-  const {A,porPago,tipos,totalCobrado}=calcReporte(d,h);
+  const {A,porPago,tipos,totalCobrado,totalEgresos,egCount,balance}=calcReporte(d,h);
   const lbl={venta:'Ventas',apartado:'Apartados',taller:'Taller',cotizacion:'Cotizaciones'};
   const tile=(k,v,sub)=>light
     ? `<div style="border:1px solid #ddd;border-radius:8px;padding:10px 12px;background:#fff"><div style="color:#666;font-size:10px;text-transform:uppercase;letter-spacing:.5px">${k}</div><div style="font-size:17px;font-weight:800;color:#1a1a1a">${v}</div>${sub?`<div style="color:#888;font-size:11px">${sub}</div>`:''}</div>`
@@ -979,12 +1045,15 @@ function reporteInner(light){
   const cardsTipo=['venta','apartado','taller','cotizacion'].map(t=>tile(lbl[t],money(tipos[t].m),tipos[t].c+' nota(s)')).join('');
   const cardsPago=PAGOS.map(p=>tile(p,money(porPago[p]))).join('');
   const hcol=light?'color:#666':'';
-  const total=light?`<div style="font-size:22px;font-weight:800;color:#1a1a1a">Total cobrado: ${money(totalCobrado)}</div>`
-    :`<div class="total-line" style="font-size:22px;text-align:left">Total cobrado: ${money(totalCobrado)}</div>`;
-  return `${total}
+  const c1=light?'#1a1a1a':'var(--txt)',cred=light?'#c0392b':'var(--accent)';
+  const line=(txt,val,col,big)=>`<div style="display:flex;justify-content:space-between;${big?'font-size:20px;font-weight:800;':'font-size:15px;'}color:${col};margin-top:6px"><span>${txt}</span><span>${val}</span></div>`;
+  return `${line('Ingresos',money(totalCobrado),c1,true)}
     <div style="margin:16px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;${hcol}">Por tipo de nota</div><div ${grid}>${cardsTipo}</div>
     <div style="margin:16px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;${hcol}">Por método de pago</div><div ${grid}>${cardsPago}</div>
-    <div style="margin-top:10px;color:${light?'#888':'var(--muted)'};font-size:12px">${A.length} nota(s) en el periodo</div>`;
+    ${line('Egresos (proveedores)','- '+money(totalEgresos),cred)}
+    <div style="border-top:1px solid ${light?'#ddd':'var(--line)'};margin-top:6px"></div>
+    ${line('Balance',money(balance),c1,true)}
+    <div style="margin-top:10px;color:${light?'#888':'var(--muted)'};font-size:12px">${A.length} nota(s) de ingreso · ${egCount} egreso(s)</div>`;
 }
 function renderReportes(){document.getElementById('reporteContenido').innerHTML=reporteInner(false);}
 document.getElementById('rDesde').onchange=renderReportes;
@@ -1008,7 +1077,7 @@ document.getElementById('rPDF').onclick=async()=>{
   }catch(e){if(e.name!=='AbortError')toast('No se pudo generar el PDF: '+e.message);}
 };
 
-function refresh(){renderDashboard();renderLista();renderPapelera();}
+function refresh(){renderDashboard();renderLista();renderPapelera();renderProveedores();}
 
 // ---- Exportar CSV ----
 document.getElementById('exportar').onclick=()=>{
