@@ -57,6 +57,7 @@
   .badge.venta{background:rgba(34,197,94,.15);color:var(--green)}
   .badge.apartado{background:rgba(245,158,11,.15);color:var(--amber)}
   .badge.taller{background:rgba(59,130,246,.15);color:var(--blue)}
+  .badge.cotizacion{background:rgba(154,163,178,.18);color:var(--muted)}
   .badge.pagado{background:rgba(34,197,94,.15);color:var(--green)}
   .badge.pendiente{background:rgba(245,158,11,.15);color:var(--amber)}
   .badge.entregado{background:rgba(34,197,94,.15);color:var(--green)}
@@ -184,6 +185,7 @@
             <option value="venta">Venta</option>
             <option value="apartado">Apartado</option>
             <option value="taller">Taller</option>
+            <option value="cotizacion">Cotización</option>
           </select>
         </div>
         <div><label>Fecha</label><input type="date" id="fFecha"></div>
@@ -250,6 +252,7 @@
         <option value="venta">Venta</option>
         <option value="apartado">Apartado</option>
         <option value="taller">Taller</option>
+        <option value="cotizacion">Cotización</option>
       </select>
       <select id="ordenar">
         <option value="fecha_desc">Más recientes primero</option>
@@ -604,7 +607,7 @@ document.getElementById('guardar').onclick=async()=>{
 };
 
 function folio(tipo){
-  const pref={venta:'V',apartado:'A',taller:'T'}[tipo];
+  const pref={venta:'V',apartado:'A',taller:'T',cotizacion:'C'}[tipo];
   const n=notas.filter(x=>x.tipo===tipo).length+1;
   return pref+String(n).padStart(4,'0');
 }
@@ -729,7 +732,7 @@ function bindNoteClicks(container){
   container.querySelectorAll('.note').forEach(el=>el.onclick=()=>abrirDetalle(el.dataset.id));
 }
 
-const tipoLabel={venta:'Nota de venta',apartado:'Nota de apartado',taller:'Nota de taller'};
+const tipoLabel={venta:'Nota de venta',apartado:'Nota de apartado',taller:'Nota de taller',cotizacion:'Cotización'};
 function abrirDetalle(id){
   const n=notas.find(x=>x.id===id);if(!n)return;
   const rows=n.items.map(i=>`<tr><td>${i.desc}</td><td class="num">${i.cant}</td><td class="num">${money(i.precio)}</td><td class="num">${money(i.cant*i.precio)}</td></tr>`).join('');
@@ -768,14 +771,15 @@ function abrirDetalle(id){
     <table class="r-items"><thead><tr><th>Descripción</th><th class="num">Cant.</th><th class="num">P. Unitario</th><th class="num">Importe</th></tr></thead><tbody>${rows}</tbody></table>
     ${totales}
     <div class="r-foot">
-      <div>${n.obs?'<b>Observaciones:</b> '+n.obs+'<br>':''}Gracias por su preferencia. Conserve esta nota para cualquier aclaración o garantía.</div>
-      <div class="r-sign"><div class="line">Firma / recibí conforme</div></div>
+      <div>${n.obs?'<b>Observaciones:</b> '+n.obs+'<br>':''}${n.tipo==='cotizacion'?'Cotización válida por 15 días. Precios sujetos a cambio sin previo aviso. No incluye trabajos no especificados.':'Gracias por su preferencia. Conserve esta nota para cualquier aclaración o garantía.'}</div>
+      <div class="r-sign"><div class="line">${n.tipo==='cotizacion'?'Atendió':'Firma / recibí conforme'}</div></div>
     </div>`;
   document.getElementById('dlgActions').innerHTML=`
     ${(n.tipo==='apartado'||n.tipo==='taller')&&n.saldo>0?'<button class="btn sm" id="abonar">Registrar abono</button>':''}
     ${n.tipo==='taller'&&n.estado==='proceso'?'<button class="btn sm" id="entregar">Marcar entregado</button>':''}
     ${n.wa?`<button class="btn sm" id="waCli" style="background:#25D366">WhatsApp cliente</button>`:''}
     <button class="btn sm" id="compartir" style="background:#0a7">Compartir / Enviar</button>
+    ${n.tipo==='cotizacion'?'<button class="btn sm" id="convertir" style="background:#0a7">Convertir a venta</button>':''}
     <button class="btn sec sm" id="editar">Editar</button>
     <button class="btn sec sm" id="imprimir">Imprimir / PDF</button>
     <button class="btn sec sm" id="borrar">Eliminar</button>
@@ -843,6 +847,15 @@ function abrirDetalle(id){
     window.open(waLink(n.wa)+'?text='+encodeURIComponent(msg),'_blank');
   };
   document.getElementById('editar').onclick=()=>{document.getElementById('dlg').close();cargarEnFormulario(n);};
+  const cv=document.getElementById('convertir');
+  if(cv)cv.onclick=()=>{
+    document.getElementById('dlg').close();
+    cargarEnFormulario(n);
+    editandoId=null; // crear una nota NUEVA (la cotización se conserva)
+    document.getElementById('fTipo').value='venta';fTipo.onchange();
+    document.getElementById('guardar').textContent='Guardar nota';
+    toast('Cotización cargada como venta');
+  };
   document.getElementById('borrar').onclick=async()=>{
     if(await confirmModal('¿Eliminar la nota '+n.folio+'? Esta acción no se puede deshacer.')){
       try{await DB.remove(id);}catch(e){toast('Error: '+e.message);return;}
