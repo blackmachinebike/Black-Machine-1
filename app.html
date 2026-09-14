@@ -434,6 +434,22 @@ document.getElementById('btnConfig').onclick=async()=>{
   await DB.saveConfig();renderHeader();toast('Datos de la tienda actualizados');
 };
 const money=n=>'$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+// Agrega un canvas (posiblemente muy alto) a un PDF repartiéndolo en varias
+// páginas A4. Sin esto, el contenido largo se recorta en una sola hoja.
+function pdfAddCanvasPaged(pdf,canvas){
+  const pageW=210,pageH=297;                 // A4 en mm
+  const imgW=pageW,imgH=canvas.height*imgW/canvas.width;
+  const img=canvas.toDataURL('image/jpeg',0.95);
+  let heightLeft=imgH,position=0;
+  pdf.addImage(img,'JPEG',0,position,imgW,imgH);
+  heightLeft-=pageH;
+  while(heightLeft>0){                        // queda contenido: nueva página
+    position-=pageH;
+    pdf.addPage();
+    pdf.addImage(img,'JPEG',0,position,imgW,imgH);
+    heightLeft-=pageH;
+  }
+}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const activas=()=>notas.filter(n=>!n.borrada);
 const esEgreso=n=>n.tipo==='egreso';
@@ -896,8 +912,7 @@ function abrirDetalle(id){
     document.body.removeChild(holder);
     const {jsPDF}=window.jspdf;
     const pdf=new jsPDF('p','mm','a4');
-    const w=210,h=canvas.height*w/canvas.width;
-    pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,w,h);
+    pdfAddCanvasPaged(pdf,canvas);
     const nombre=(n.folio||'nota')+'_'+(n.cliente||'').replace(/\s+/g,'_')+'.pdf';
     return {pdf,file:new File([pdf.output('blob')],nombre,{type:'application/pdf'})};
   }
@@ -1070,7 +1085,7 @@ document.getElementById('rPDF').onclick=async()=>{
     const canvas=await html2canvas(holder,{scale:2,backgroundColor:'#ffffff'});
     document.body.removeChild(holder);
     const {jsPDF}=window.jspdf;const pdf=new jsPDF('p','mm','a4');
-    const w=210,hh=canvas.height*w/canvas.width;pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,w,hh);
+    pdfAddCanvasPaged(pdf,canvas);
     const file=new File([pdf.output('blob')],`reporte_${d}_${h}.pdf`,{type:'application/pdf'});
     if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file],title:'Reporte Black Machine'});
     else pdf.save(file.name);
