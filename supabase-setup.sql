@@ -25,6 +25,7 @@ create table if not exists public.notas (
   total     numeric default 0,
   anticipo  numeric default 0,
   saldo     numeric default 0,
+  abonos    jsonb default '[]'::jsonb,
   obs       text,
   borrada   boolean default false,
   creada    timestamptz default now()
@@ -34,7 +35,8 @@ create table if not exists public.notas (
 create table if not exists public.config (
   id        int primary key default 1,
   tel       text,
-  whatsapp  text
+  whatsapp  text,
+  google    text
 );
 
 -- Historial de clientes
