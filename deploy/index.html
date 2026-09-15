@@ -343,9 +343,10 @@ const TIENDA=Object.assign({
   nombre:'Black Machine Bike Shop',
   dir:'Av. Tesistán 704A, San José del Bajío, Zapopan, Jalisco. CP 45140',
   tel:'',
-  whatsapp:'3325899142'
+  whatsapp:'3325899142',
+  google:''
 },JSON.parse(localStorage.getItem(CKEY)||'{}'));
-function saveConfig(){localStorage.setItem(CKEY,JSON.stringify({tel:TIENDA.tel,whatsapp:TIENDA.whatsapp}));}
+function saveConfig(){localStorage.setItem(CKEY,JSON.stringify({tel:TIENDA.tel,whatsapp:TIENDA.whatsapp,google:TIENDA.google}));}
 const waLink=num=>num?('https://wa.me/'+num.replace(/[^0-9]/g,'')):'';
 const PAGOS=['Efectivo','Tarjeta','Transferencia','Depósito','Mixto'];
 const digits=s=>(s||'').replace(/\D/g,'');
@@ -431,6 +432,8 @@ document.getElementById('btnConfig').onclick=async()=>{
   if(w!==null)TIENDA.whatsapp=w.trim();
   const t=await askInput({title:'Datos de la tienda',label:'Teléfono (opcional)',value:TIENDA.tel});
   if(t!==null)TIENDA.tel=t.trim();
+  const g=await askInput({title:'Datos de la tienda',label:'Enlace de reseñas de Google (opcional)',value:TIENDA.google});
+  if(g!==null)TIENDA.google=g.trim();
   await DB.saveConfig();renderHeader();toast('Datos de la tienda actualizados');
 };
 const money=n=>'$'+(Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -451,6 +454,10 @@ function pdfAddCanvasPaged(pdf,canvas){
   }
 }
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+// Fecha de hoy en formato AAAA-MM-DD respetando la zona horaria local
+const hoyISO=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);};
+// Fecha corta "15/08/2026"
+const fechaCorta=f=>{const [y,m,d]=String(f||'').slice(0,10).split('-');return (y&&m&&d)?`${d}/${m}/${y}`:(f||'');};
 const activas=()=>notas.filter(n=>!n.borrada);
 const esEgreso=n=>n.tipo==='egreso';
 const ingresos=()=>activas().filter(n=>!esEgreso(n));   // ventas/apartados/taller/cotizaciones
@@ -476,6 +483,19 @@ async function withRetry(fn,tries=3){
   throw err;
 }
 // ---- Capa de datos: local (localStorage) o nube (Supabase) ----
+// Upsert tolerante: si una columna opcional todavía no existe en la base
+// (migración pendiente), la quita y reintenta para no romper el guardado.
+async function upsertSafe(table,obj,optionalCols){
+  try{
+    await withRetry(async()=>{const {error}=await sb.from(table).upsert(obj);if(error)throw error;});
+  }catch(e){
+    const msg=((e&&e.message)||'').toLowerCase();
+    if(optionalCols.some(c=>msg.includes(c.toLowerCase()))){
+      const clean={...obj};optionalCols.forEach(c=>delete clean[c]);
+      await withRetry(async()=>{const {error}=await sb.from(table).upsert(clean);if(error)throw error;});
+    }else throw e;
+  }
+}
 const DB={
   async all(){
     if(!CLOUD)return JSON.parse(localStorage.getItem(KEY)||'[]');
@@ -486,12 +506,12 @@ const DB={
   async insert(n){
     if(!CLOUD){notas.unshift(n);localStorage.setItem(KEY,JSON.stringify(notas));return;}
     // upsert = idempotente por id: si un reintento ocurre, no duplica
-    await withRetry(async()=>{const {error}=await sb.from('notas').upsert(n);if(error)throw error;});
+    await upsertSafe('notas',n,['abonos']);
     if(!notas.some(x=>x.id===n.id))notas.unshift(n);
   },
   async update(n){
     if(!CLOUD){localStorage.setItem(KEY,JSON.stringify(notas));return;}
-    await withRetry(async()=>{const {error}=await sb.from('notas').upsert(n);if(error)throw error;});
+    await upsertSafe('notas',n,['abonos']);
   },
   async remove(id){
     if(!CLOUD){notas=notas.filter(x=>x.id!==id);localStorage.setItem(KEY,JSON.stringify(notas));return;}
@@ -515,11 +535,11 @@ const DB={
   async loadConfig(){
     if(!CLOUD)return;
     const {data}=await sb.from('config').select('*').eq('id',1).maybeSingle();
-    if(data){if(data.tel!=null)TIENDA.tel=data.tel;if(data.whatsapp!=null)TIENDA.whatsapp=data.whatsapp;}
+    if(data){if(data.tel!=null)TIENDA.tel=data.tel;if(data.whatsapp!=null)TIENDA.whatsapp=data.whatsapp;if(data.google!=null)TIENDA.google=data.google;}
   },
   async saveConfig(){
-    if(!CLOUD){localStorage.setItem(CKEY,JSON.stringify({tel:TIENDA.tel,whatsapp:TIENDA.whatsapp}));return;}
-    await sb.from('config').upsert({id:1,tel:TIENDA.tel,whatsapp:TIENDA.whatsapp});
+    if(!CLOUD){localStorage.setItem(CKEY,JSON.stringify({tel:TIENDA.tel,whatsapp:TIENDA.whatsapp,google:TIENDA.google}));return;}
+    await upsertSafe('config',{id:1,tel:TIENDA.tel,whatsapp:TIENDA.whatsapp,google:TIENDA.google},['google']);
   }
 };
 
@@ -685,6 +705,7 @@ document.getElementById('guardar').onclick=async()=>{
     estado:document.getElementById('fEstado').value,
     items,subtotal,descuento,total,anticipo,
     saldo:total-anticipo,
+    abonos:editing?(editing.abonos||[]):(((tipo==='apartado'||tipo==='taller'||tipo==='egreso')&&anticipo>0)?[{fecha:document.getElementById('fFecha').value||hoyISO(),monto:anticipo}]:[]),
     obs:document.getElementById('fObs').value.trim(),
     borrada:editing?(editing.borrada||false):false,
     creada:editing?editing.creada:new Date().toISOString()
@@ -713,8 +734,17 @@ document.getElementById('guardar').onclick=async()=>{
 
 function folio(tipo){
   const pref={venta:'V',apartado:'A',taller:'T',cotizacion:'C',egreso:'E'}[tipo];
-  const n=notas.filter(x=>x.tipo===tipo).length+1;
-  return pref+String(n).padStart(4,'0');
+  // Se cuenta por PREFIJO del folio (no por tipo): así un apartado que se
+  // convierte en venta conserva su folio "A####" y no genera huecos ni
+  // choques en la numeración de ventas. Se usa el mayor número + 1.
+  let max=0;
+  notas.forEach(x=>{
+    if(x.folio&&x.folio[0]===pref){
+      const num=parseInt(String(x.folio).slice(1),10);
+      if(!isNaN(num)&&num>max)max=num;
+    }
+  });
+  return pref+String(max+1).padStart(4,'0');
 }
 
 // ---- Dashboard ----
@@ -854,6 +884,16 @@ function abrirDetalle(id){
     ${biciTxt?`<div><b>Bicicleta</b>${biciTxt}</div>`:''}
     <div style="text-align:right"><b>Fecha</b>${fechaLarga(n.fecha)}${n.pago?'<br><b>Pago</b>'+n.pago:''}</div>`;
   const mostrarSaldo=(n.tipo==='apartado')||(n.tipo==='egreso')||(n.tipo==='taller'&&(+n.anticipo>0));
+  // Historial de abonos con su fecha
+  const abonosHtml=(Array.isArray(n.abonos)&&n.abonos.length)?`
+    <div class="r-abonos" style="margin-top:12px;font-size:11px;color:#555">
+      <b style="color:#666;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Historial de abonos</b>
+      ${n.abonos.map(a=>`<div style="display:flex;justify-content:space-between;border-bottom:1px dotted #ddd;padding:3px 0"><span>${fechaCorta(a.fecha)}</span><span>${money(a.monto)}</span></div>`).join('')}
+    </div>`:'';
+  // Invitación a calificar en Google
+  const pieCompra='¡Gracias por su compra! '+(TIENDA.google
+    ? 'Déjanos tu reseña en Google ⭐<br>'+TIENDA.google
+    : 'Búscanos en Google como '+TIENDA.nombre+' y déjanos tu reseña ⭐');
   const totales=`
     <div class="r-totals">
       ${(+n.descuento>0)?`<div><span>Subtotal</span><span>${money(n.subtotal!=null?n.subtotal:n.total+ +n.descuento)}</span></div>
@@ -883,8 +923,9 @@ function abrirDetalle(id){
     ${n.diag?`<div style="font-size:12px;margin-bottom:8px"><b style="color:#666;font-size:10px;text-transform:uppercase">Servicio</b><br>${n.diag}${n.tipo==='taller'?' · Estado: '+(n.estado==='proceso'?'En proceso':'Entregado'):''}</div>`:''}
     <table class="r-items"><thead><tr><th>Descripción</th><th class="num">Cant.</th><th class="num">P. Unitario</th><th class="num">Importe</th></tr></thead><tbody>${rows}</tbody></table>
     ${totales}
+    ${abonosHtml}
     <div class="r-foot">
-      <div>${n.obs?'<b>Observaciones:</b> '+n.obs+'<br>':''}${n.tipo==='cotizacion'?'Cotización válida por 15 días. Precios sujetos a cambio sin previo aviso. No incluye trabajos no especificados.':'¡Gracias por su compra! Nos encantaría conocer su opinión: califíquenos en Google.'}</div>
+      <div>${n.obs?'<b>Observaciones:</b> '+n.obs+'<br>':''}${n.tipo==='cotizacion'?'Cotización válida por 15 días. Precios sujetos a cambio sin previo aviso. No incluye trabajos no especificados.':pieCompra}</div>
       <div class="r-sign"><div class="line">${n.tipo==='cotizacion'?'Atendió':'Firma / recibí conforme'}</div></div>
     </div>`;
   document.getElementById('dlgActions').innerHTML=`
@@ -932,10 +973,17 @@ function abrirDetalle(id){
     if(r===null)return;
     const v=parseFloat(r);
     if(!(v>0)){toast('Ingresa un monto válido.');return;}
+    const previo={anticipo:n.anticipo,saldo:n.saldo,tipo:n.tipo,abonos:n.abonos};
     n.anticipo+=v;n.saldo=Math.max(0,n.total-n.anticipo);
-    try{await DB.update(n);}catch(e){toast('Error: '+e.message);return;}
+    n.abonos=Array.isArray(n.abonos)?n.abonos.slice():[];
+    n.abonos.push({fecha:hoyISO(),monto:v});
+    // Apartado liquidado -> se convierte en nota de venta (conserva su folio)
+    let convertida=false;
+    if(n.tipo==='apartado'&&n.saldo<=0){n.tipo='venta';convertida=true;}
+    try{await DB.update(n);}catch(e){Object.assign(n,previo);toast('Error: '+e.message);return;}
+    const idx=notas.findIndex(x=>x.id===n.id);if(idx>=0)notas[idx]=n;
     document.getElementById('dlg').close();refresh();
-    toast('Abono de '+money(v)+' registrado.');
+    toast(convertida?('Apartado liquidado ✔ Ahora es nota de venta '+n.folio):('Abono de '+money(v)+' registrado.'));
   };
   const en=document.getElementById('entregar');
   if(en)en.onclick=async()=>{n.estado='entregado';try{await DB.update(n);}catch(e){toast('Error: '+e.message);return;}document.getElementById('dlg').close();refresh();};
@@ -943,7 +991,8 @@ function abrirDetalle(id){
   if(wc)wc.onclick=async()=>{
     const conSaldoWA=(n.tipo==='apartado'||n.tipo==='taller')&&(+n.anticipo>0||n.tipo==='apartado');
     const monto=conSaldoWA?`Saldo pendiente: ${money(n.saldo)} (de ${money(n.total)})`:`Total: ${money(n.total)}`;
-    const msg=`Hola ${n.cliente}, gracias por tu preferencia en ${TIENDA.nombre}.\n${tipoLabel[n.tipo]} ${n.folio}\n${monto}\nPago: ${n.pago||'—'}`;
+    const invita=TIENDA.google?`\n\n¡Gracias por tu compra! Déjanos tu reseña en Google ⭐\n${TIENDA.google}`:'';
+    const msg=`Hola ${n.cliente}, gracias por tu preferencia en ${TIENDA.nombre}.\n${tipoLabel[n.tipo]} ${n.folio}\n${monto}\nPago: ${n.pago||'—'}${invita}`;
     // Enviar el PDF junto al texto por el menú de compartir (incluye WhatsApp)
     if(window.jspdf&&window.html2canvas&&navigator.canShare){
       toast('Generando PDF…');
