@@ -884,7 +884,7 @@ function abrirDetalle(id){
     <table class="r-items"><thead><tr><th>Descripción</th><th class="num">Cant.</th><th class="num">P. Unitario</th><th class="num">Importe</th></tr></thead><tbody>${rows}</tbody></table>
     ${totales}
     <div class="r-foot">
-      <div>${n.obs?'<b>Observaciones:</b> '+n.obs+'<br>':''}${n.tipo==='cotizacion'?'Cotización válida por 15 días. Precios sujetos a cambio sin previo aviso. No incluye trabajos no especificados.':'Gracias por su preferencia. Conserve esta nota para cualquier aclaración o garantía.'}</div>
+      <div>${n.obs?'<b>Observaciones:</b> '+n.obs+'<br>':''}${n.tipo==='cotizacion'?'Cotización válida por 15 días. Precios sujetos a cambio sin previo aviso. No incluye trabajos no especificados.':'¡Gracias por su compra! Nos encantaría conocer su opinión: califíquenos en Google.'}</div>
       <div class="r-sign"><div class="line">${n.tipo==='cotizacion'?'Atendió':'Firma / recibí conforme'}</div></div>
     </div>`;
   document.getElementById('dlgActions').innerHTML=`
